@@ -8,7 +8,11 @@
     "start:electron": "cd AlamandaManagerDesktop && npm run start",
     "start:react-native": "cd AlamandaApp && npm run start",
     "desktop": "concurrently \"npm run start:backend\" \"npm run start:electron\"",
-    "mobile": "concurrently \"npm run start:backend\" \"npm run start:react-native\""
+    "mobile": "concurrently \"npm run start:backend\" \"npm run start:react-native\"",
+    "i:mobile": "cd AlamandaApp && npm i",
+    "i:desktop": "cd AlamandaManagerDesktop && npm i",
+    "i:back": "cd AlamandaApi && dotnet restore",
+    "i:all": "concurrently \"npm run i:mobile\" \"npm run i:desktop\" \"npm run i:back\""
   },
   "keywords": [],
   "author": "",
