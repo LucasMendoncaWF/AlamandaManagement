@@ -1,0 +1,19 @@
+{
+  "name": "alamandamanagement",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start:backend": "cd AlamandaApi && dotnet watch run",
+    "start:electron": "cd AlamandaManagerDesktop && npm run start",
+    "start:react-native": "cd AlamandaApp && npm run start",
+    "desktop": "concurrently \"npm run start:backend\" \"npm run start:electron\"",
+    "mobile": "concurrently \"npm run start:backend\" \"npm run start:react-native\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.0"
+  }
+}
