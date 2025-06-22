@@ -13,17 +13,13 @@ This is a fullstack project including a .NET backend, a desktop app with Electro
 ## Prerequisites
 - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [Node.js 22+](https://nodejs.org/) 
-- MongoDB
+- [MongoDB](www.mongodb.com)
 
----
 
 ## Setup
 
 1. Copy `.env.example` to `.env` in projects that use environment variables, and configure the necessary values.
 2. Install dependencies by running the commands below (npm run i:all).
-
----
-### Install dependencies (Use npm run i:all at first)
 
 ```bash
 npm run i:back       # Restore backend (.NET) packages
@@ -32,7 +28,6 @@ npm run i:mobile     # Install React Native mobile dependencies
 npm run i:all        # Install all dependencies at once (backend, desktop, and mobile)
 ```
 
----
 3. Start the project!
 ```bash
 npm run start:backend      # Start backend with hot reload (dotnet watch)
