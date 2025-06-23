@@ -35,17 +35,17 @@ namespace AlamandaApi.Services.User
   public class RegisterRequest
   {
     [Required(ErrorMessage = "Username é obrigatório")]
-    [MaxLength(100, ErrorMessage = "Username pode ter no máximo 100 caracteres")]
+    [MaxLength(50, ErrorMessage = "Username pode ter no máximo 50 caracteres")]
     public string Username { get; set; } = null!;
 
     [Required(ErrorMessage = "Email é obrigatório")]
     [EmailAddress(ErrorMessage = "Email inválido")]
-    [MaxLength(100, ErrorMessage = "Email pode ter no máximo 100 caracteres")]
+    [MaxLength(50, ErrorMessage = "Email pode ter no máximo 50 caracteres")]
     public string Email { get; set; } = null!;
 
     [Required(ErrorMessage = "Senha é obrigatória")]
     [MinLength(6, ErrorMessage = "Senha deve ter no mínimo 6 caracteres")]
-    [MaxLength(100, ErrorMessage = "Senha pode ter no máximo 100 caracteres")]
+    [MaxLength(50, ErrorMessage = "Senha pode ter no máximo 50 caracteres")]
     public string Password { get; set; } = null!;
   }
 

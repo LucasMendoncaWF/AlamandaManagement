@@ -41,16 +41,20 @@ var allowedHosts = allowedHostsEnv.Split(',', StringSplitOptions.RemoveEmptyEntr
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("DefaultCorsPolicy", policy =>
+  options.AddPolicy("DefaultCorsPolicy", policy =>
+  {
+    policy
+    .SetIsOriginAllowed(origin =>
     {
-        policy.SetIsOriginAllowed(origin =>
-        {
-            if (string.IsNullOrEmpty(origin)) return true;  // libera Electron/React Native sem Origin
-            return allowedHosts.Contains(origin);
-        })
-        .AllowAnyHeader()
-        .AllowAnyMethod();
-    });
+      if (string.IsNullOrEmpty(origin))
+      {
+        return true;
+      }
+      return allowedHosts.Contains(origin);
+    })
+    .AllowAnyHeader()
+    .AllowAnyMethod();
+  });
 });
 
 builder.Services.AddControllers();
@@ -59,11 +63,16 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+// Middleware importante: precisa estar antes do UseAuthentication/UseAuthorization
+app.UseRouting();
+
+app.UseCors("DefaultCorsPolicy");
 
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.MapControllers();
 

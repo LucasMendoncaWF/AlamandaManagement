@@ -1,8 +1,18 @@
+<style lang="scss">
+ @use "@/assets/global.scss" as *;
+</style>
+
+
 <template>
-  <h1>💖 Hello World!</h1>
-  <p>Welcome to your VUE2 application.</p>
+  <router-view />
 </template>
 
 <script setup>
-  console.log('👋 This message is being logged by "App.vue", included via Vite');
+  import { onMounted } from 'vue';
+  import { useRouter } from 'vue-router';
+  const router = useRouter();
+  const token = localStorage.getItem('token');
+  if (!token) {
+    router.push('/');
+  }
 </script>
