@@ -9,7 +9,22 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.home,
     name: 'home',
-    component: () => import('@/pages/homePage.vue'),
+    component: () => import('@/pages/ordersPage.vue'),
+  },
+  {
+    path: urls.users,
+    name: 'users',
+    component: () => import('@/pages/usersPage.vue'),
+  },
+  {
+    path: urls.team,
+    name: 'tean',
+    component: () => import('@/pages/teamPage.vue'),
+  },
+  {
+    path: urls.arts,
+    name: 'arts',
+    component: () => import('@/pages/artsPage.vue'),
   },
 ];
 

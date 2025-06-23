@@ -28,6 +28,7 @@ namespace AlamandaApi.Services.User
 
   public class LoginRequest
   {
+    [Required(ErrorMessage = "E-mail é obrigatório")]
     public string Email { get; set; } = null!;
     public string Password { get; set; } = null!;
   }
