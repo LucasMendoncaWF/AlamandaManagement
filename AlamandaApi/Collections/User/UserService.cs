@@ -1,5 +1,4 @@
 using MongoDB.Driver;
-using System.Security.Cryptography;
 
 namespace AlamandaApi.Services.User
 {
@@ -21,6 +20,12 @@ namespace AlamandaApi.Services.User
 
     public async Task Create(UserModel user)
     {
+      var existingUser = await GetByEmail(user.Email);
+      if (existingUser != null)
+      {
+        throw new Exception("Usuário já cadastrado.");
+      }
+
       await _users.InsertOneAsync(user);
     }
     

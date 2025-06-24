@@ -14,14 +14,22 @@
       border-radius: 5px;
 
       &:focus {
-        outline: 3px solid $secondary;
+        outline: 2px solid $secondary;
+      }
+    }
+
+    &--inverted {
+      color: $secondary;
+
+      input {
+        border: 2px solid $secondary;
       }
     }
   }
 </style>
 
 <template>
-  <div class="form-input">
+  <div :class="`form-input form-input--${variant}`">
     <label :for="props.id">{{ props.label }}</label>
     <input
       :id="props.id"
@@ -39,6 +47,7 @@
     modelValue: string;
     label: string;
     id: string;
+    variant?: 'inverted'
   }
  
   const props = defineProps<Props>();
@@ -48,7 +57,7 @@
     (e: 'update:modelValue', value: string): void
   }>();
 
-  function onInput(event: Event) {
+  const onInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     emit('update:modelValue', target.value);
   }

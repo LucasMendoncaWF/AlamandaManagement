@@ -3,7 +3,7 @@
   .form-submit {
     background-color: $secondary;
     color: $white;
-    padding: 10px;
+    padding: 13.5px;
     border: 0;
     font-weight: bold;
     border-radius: 5px;
@@ -30,18 +30,15 @@
 </style>
 
 <template>
-  <input type="submit" class="form-submit" v-bind="attrs" @click="onClick"/>
+  <input type="submit" class="form-submit" v-bind="attrs" @click="props.onClick"/>
 </template>
 
 <script lang="ts" setup>
   import { useAttrs } from 'vue';
-  const attrs = useAttrs();
-
- const emit = defineEmits<{
-    (event: 'onClick'): void;
-  }>();
-
-  function onClick(e: MouseEvent) {
-    emit('onClick');
+  interface Props {
+    onClick?: () => void;
   }
+
+  const props = defineProps<Props>();
+  const attrs = useAttrs();
 </script>

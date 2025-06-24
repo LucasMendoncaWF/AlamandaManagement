@@ -1,4 +1,5 @@
 using AlamandaApi.Services.User;
+using AlamandaApi.Services.Team;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -17,6 +18,7 @@ var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";
 
 builder.Services.AddSingleton(mongoSettings);
 builder.Services.AddSingleton<UserService>();
+builder.Services.AddSingleton<TeamService>();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -75,5 +77,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 
 app.MapControllers();
+app.UseStaticFiles();
 
 app.Run();

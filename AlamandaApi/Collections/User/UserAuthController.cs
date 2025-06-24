@@ -23,17 +23,7 @@ namespace AlamandaApi.Services.User
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequest user)
         {
-          var existingUser = await _userService.GetByEmail(user.Email);
-          if (existingUser != null)
-              return BadRequest("Email já cadastrado");
-
-          var newUser = new UserModel
-          {
-            Username = user.Username,
-            Email = user.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(user.Password),
-            Permission = "user"
-          };
+          var newUser = ObjectMapperUtil.CopyWithCapitalization<RegisterRequest, UserModel>(user);
           await _userService.Create(newUser);
 
           var jwt = GenerateJwtToken(newUser);

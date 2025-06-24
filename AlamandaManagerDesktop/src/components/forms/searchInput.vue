@@ -53,7 +53,7 @@
     (e: 'update:modelValue', value: string): void
   }>();
 
-  function onInput(event: Event) {
+  const onInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     emit('update:modelValue', target.value);
   }

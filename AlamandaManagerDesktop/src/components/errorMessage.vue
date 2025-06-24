@@ -12,6 +12,29 @@
     top: 5px;
     animation: appearDown 1s;
     box-shadow: -4px 5px 1px 1px $black;
+
+    button {
+      background-color: transparent;
+      border: 0;
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      cursor: pointer;
+
+      img {
+        width: 15px;
+        filter: brightness(10);
+      }
+    }
+
+    &--white {
+      background-color: $white;
+      color: $secondary;
+
+      button img {
+        filter: brightness(0);
+      }
+    }
   }
 
   @keyframes appearDown {
@@ -27,12 +50,18 @@
 </style>
 
 <template>
-  <div class="error-message">{{props.message}}</div>
+  <div :class="`error-message error-message--${variant}`">
+    {{props.message}} 
+    <button @click="onClose"><img alt="close" :src="closeIcon" /></button>
+  </div>
 </template>
 
 <script lang="ts" setup>
+  const closeIcon = new URL('@/assets/icons/icon_close.svg', import.meta.url).href;
   interface Props {
     message: string;
+    onClose: () => void;
+    variant?: 'white';
   }
   const props = defineProps<Props>();
 </script>

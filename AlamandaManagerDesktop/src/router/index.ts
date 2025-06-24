@@ -4,27 +4,27 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.login,
     name: 'login',
-    component: () => import('@/pages/loginPage.vue'),
+    component: () => import('@/sections/loginPage.vue'),
   },
   {
     path: urls.home,
     name: 'home',
-    component: () => import('@/pages/ordersPage.vue'),
+    component: () => import('@/sections/ordersPage.vue'),
   },
   {
     path: urls.users,
     name: 'users',
-    component: () => import('@/pages/usersPage.vue'),
+    component: () => import('@/sections/usersPage.vue'),
   },
   {
     path: urls.team,
     name: 'tean',
-    component: () => import('@/pages/teamPage.vue'),
+    component: () => import('@/sections/team/teamPage.vue'),
   },
   {
     path: urls.arts,
     name: 'arts',
-    component: () => import('@/pages/artsPage.vue'),
+    component: () => import('@/sections/artsPage.vue'),
   },
 ];
 

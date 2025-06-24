@@ -63,7 +63,7 @@
   <div class="background-container">
   </div>
   <div class="login-page">
-    <ErrorMessage message="Verifique os dados inseridos e tente novamente" v-if="hasError" />
+    <ErrorMessage :onClose="onCloseErrorMessage" message="Verifique os dados inseridos e tente novamente" v-if="hasError" />
     <form @submit.prevent="onSubmit">
       <div class="form-content">
         <img class="logo-image" :src="logo" alt="logo" />
@@ -73,40 +73,49 @@
       </div>
     </form>
   </div>
+  <Loader v-if="isLoading" />
 </template>
 
 <script lang="ts" setup>
-  import { ref } from 'vue';
+  import { reactive, ref } from 'vue';
   import { useRouter } from 'vue-router';
   import FormInput from '@/components/forms/formInput.vue';
   import FormSubmit from '@/components/forms/formSubmit.vue';
   import ErrorMessage from '@/components/errorMessage.vue';
   import { type LoginRequest, userLogIn, type LoginResponse } from '@/api/login';
+import Loader from '@/components/loader.vue';
   const logo = new URL('@/assets/images/logo.png', import.meta.url).href;
-
+  let timeout: ReturnType<typeof setTimeout>;
   const router = useRouter();
   const hasError = ref<boolean>(false);
   const isLoading = ref<boolean>(false);
-  const loginData = ref<LoginRequest>({
+  const loginData = reactive<LoginRequest>({
     email: '',
     password: '',
   });
 
   const onSubmit = async () => {
+    if(timeout) {
+      clearTimeout(timeout);
+    }
     try {
-      const tokens: LoginResponse = await userLogIn({email: loginData.value.email, password: loginData.value.password});
+      const tokens: LoginResponse = await userLogIn(loginData);
       localStorage.setItem('refreshToken', tokens.refreshToken);
       localStorage.setItem('token', tokens.token);
       router.push('/home');
     } catch (err) {
+      isLoading.value = false;
       hasError.value = true;
-      setTimeout(() => {
+      timeout = setTimeout(() => {
         hasError.value = false;
       }, 5000);
     } finally {
       isLoading.value = false;
     }
-    
+  }
+
+  const onCloseErrorMessage = () => {
+    hasError.value = false;
   }
 
 </script>

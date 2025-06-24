@@ -55,27 +55,27 @@ import urls from '@/router/urls';
     {
       label: 'Pedidos',
       url: urls.home,
-      image: new URL('../../assets/icons/icon_orders.svg', import.meta.url).href
+      image: new URL('@/assets/icons/icon_orders.svg', import.meta.url).href
     },
     {
       label: 'Quadrinhos',
       url: '/',
-      image: new URL('../../assets/icons/icon_library.svg', import.meta.url).href
+      image: new URL('@/assets/icons/icon_library.svg', import.meta.url).href
     },
     {
       label: 'Usuários',
       url: urls.users,
-      image: new URL('../../assets/icons/icon_users.svg', import.meta.url).href
+      image: new URL('@/assets/icons/icon_users.svg', import.meta.url).href
     },
     {
       label: 'Time',
       url: urls.team,
-      image: new URL('../../assets/icons/icon_team.svg', import.meta.url).href
+      image: new URL('@/assets/icons/icon_team.svg', import.meta.url).href
     },
     {
       label: 'Artes',
       url: urls.arts,
-      image: new URL('../../assets/icons/icon_art.svg', import.meta.url).href
+      image: new URL('@/assets/icons/icon_art.svg', import.meta.url).href
     }
   ];
 

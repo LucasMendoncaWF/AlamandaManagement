@@ -67,11 +67,11 @@
   const props = defineProps<Props>();
   let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  function handleFilter() {
+  const handleFilter = () => {
     isFilterOpen.value = !isFilterOpen.value;
   }
 
-  function closeFilter() {
+  const closeFilter = () => {
     isFilterOpen.value = false;
   }
 
