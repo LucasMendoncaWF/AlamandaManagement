@@ -64,8 +64,9 @@
   import FormInputImage from '@/components/forms/formInputImage.vue';
   import ErrorMessage from '@/components/errorMessage.vue';
   import { addMember, TeamMemberForm } from '@/api/teamMembers';
-import Loader from '@/components/loader.vue';
-import { fileToBase64 } from '@/utis/converter';
+  import Loader from '@/components/loader.vue';
+  import { fileToBase64 } from '@/utis/converter';
+  import { getErrorMessage } from '@/api/defaultApi';
   let timeout: ReturnType<typeof setTimeout>;
   const form = reactive<TeamMemberForm>({
     name: '',
@@ -101,9 +102,9 @@ import { fileToBase64 } from '@/utis/converter';
           submitFile = await fileToBase64(file);
         }
         await addMember({...form, picture: submitFile});
-      } catch (err) {
+      } catch (error) {
+        errorMessage.value = getErrorMessage(error);
         isLoading.value = false;
-        errorMessage.value = "Ocorreu um erro ao salvar este membro";
         timeout = setTimeout(() => {
           errorMessage.value = null;
         }, 5000);

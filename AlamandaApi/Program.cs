@@ -65,7 +65,7 @@ builder.Services.AddCors(options =>
       })
       .AllowAnyHeader()
       .AllowAnyMethod()
-      .AllowCredentials(); // ✅ importante se usa Authorization com JWT
+      .AllowCredentials();
   });
 });
 

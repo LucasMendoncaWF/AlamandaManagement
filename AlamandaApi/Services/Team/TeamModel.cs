@@ -1,10 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AlamandaApi.Services.Team
-{
-  public class TeamMemberCreationModel
-  {
+namespace AlamandaApi.Services.Team {
+  public class TeamMemberCreationModel {
     [Required(ErrorMessage = "Name é obrigatório")]
     [MaxLength(100, ErrorMessage = "Name pode ter no máximo 100 caracteres")]
     public string Name { get; set; } = null!;
@@ -15,8 +13,7 @@ namespace AlamandaApi.Services.Team
     public string? Picture { get; set; } = "user";
   }
 
-  public class TeamMemberModel : TeamMemberCreationModel
-  {
+  public class TeamMemberModel : TeamMemberCreationModel {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }

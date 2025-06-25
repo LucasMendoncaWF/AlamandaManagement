@@ -53,16 +53,23 @@ const fetchApi = ({ url, method = 'GET', body, params, headers }: RestRequest) =
   });
 }
 
+export class ApiError extends Error {
+  constructor(public message: string) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export async function restApi<T>(request: RestRequest): Promise<T> {
   const token = localStorage.getItem('token');
-    let headers = {
+  let headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
   };
 
-  let response = await fetchApi({...request, headers});
+  let response = await fetchApi({ ...request, headers });
 
-   if (response.status === 401 && !request.url.includes('auth')) {
+  if (response.status === 401 && !request.url.includes('auth')) {
     try {
       const newToken = await refreshAccessToken();
 
@@ -70,7 +77,7 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
         'Authorization': `Bearer ${newToken}`,
         'Content-Type': 'application/json',
       };
-      response = await fetchApi({...request, headers});
+      response = await fetchApi({ ...request, headers });
     } catch (error) {
       localStorage.removeItem('token');
       localStorage.removeItem('refreshToken');
@@ -80,10 +87,28 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
   }
 
   if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(errorText || `Error ${response.status}`);
+    let errorMessage = `Error ${response.status}`;
+    try {
+      const errorData = await response.json();
+      if (errorData && typeof errorData.message === 'string') {
+        errorMessage = errorData.message;
+      } else {
+        const errorText = await response.text();
+        if (errorText) errorMessage = errorText;
+      }
+    } catch {
+      //
+    }
+
+    throw new ApiError(errorMessage);
   }
 
   const data = await response.json();
   return data as T;
+}
+
+export function getErrorMessage(error: unknown): string {
+  if (typeof error === 'string') return error;
+  if (error && typeof (error as any).message === 'string') return (error as any).message;
+  return 'Erro desconhecido';
 }

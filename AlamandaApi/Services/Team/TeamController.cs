@@ -1,50 +1,50 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AlamandaApi.Services.Team
-{
+namespace AlamandaApi.Services.Team {
   [ApiController]
   [Route("[controller]")]
-  public class TeamController : ControllerBase
-  {
+  public class TeamController : ControllerBase {
     private readonly TeamService _teamService;
 
-    public TeamController(TeamService teamService)
-    {
+    public TeamController(TeamService teamService) {
       _teamService = teamService;
     }
 
     [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] TeamMemberCreationModel member)
-    {
-      await _teamService.Create(member);
-      var newMember = await _teamService.GetBySocial(member.Social);
-      return Ok(new { newMember });
+    public async Task<IActionResult> Create([FromBody] TeamMemberCreationModel member) {
+      try {
+        await _teamService.Create(member);
+        var newMember = await _teamService.GetBySocial(member.Social);
+        return Ok(new { newMember });
+      } catch (Exception ex) {
+        return Unauthorized(new { ex.Message });
+      }
     }
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update([FromBody] TeamMemberModel member)
-    {
-      var existingUser = await _teamService.GetById(member.Id);
-
-      if (existingUser == null)
-      {
-        return BadRequest("Usuário não existe!");
+    public async Task<IActionResult> Update([FromBody] TeamMemberModel member) {
+      try {
+        var existingUser = await _teamService.GetById(member.Id);
+        await _teamService.Update(member);
+        return Ok(new { member });
+      } catch (Exception ex) {
+        return BadRequest(new { ex.Message });
       }
-
-      await _teamService.Update(member);
-      return Ok(new { member });
     }
 
 
     [HttpGet("")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAll()
-    {
-      var members = await _teamService.GetAll();
-      return Ok(new { members });
+    public async Task<IActionResult> GetAll() {
+      try {
+        var members = await _teamService.GetAll();
+        return Ok(new { members });
+      } catch (Exception ex) {
+        return BadRequest(new { ex.Message });
+      }
     }  
   }
 }
