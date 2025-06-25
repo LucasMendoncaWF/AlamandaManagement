@@ -24,13 +24,10 @@ builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TeamService>();
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";
-builder.Services.AddAuthentication(options =>
-{
+builder.Services.AddAuthentication(options => {
   options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
   options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
+}).AddJwtBearer(options => {
   options.RequireHttpsMetadata = false;
   options.SaveToken = true;
   options.TokenValidationParameters = new TokenValidationParameters
@@ -42,24 +39,21 @@ builder.Services.AddAuthentication(options =>
   };
 });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("AdminOnly", policy =>
-        policy.RequireRole("admin"));
+builder.Services.AddAuthorization(options => {
+  options.AddPolicy("AdminOnly", policy =>
+      policy.RequireRole("admin"));
 });
 
 var allowedHostsEnv = Environment.GetEnvironmentVariable("ALLOWED_HOSTS") ?? "";
 var allowedHosts = allowedHostsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
-builder.Services.AddCors(options =>
-{
-  options.AddPolicy("DefaultCorsPolicy", policy =>
-  {
+builder.Services.AddCors(options => {
+  options.AddPolicy("DefaultCorsPolicy", policy => {
     policy
-      .SetIsOriginAllowed(origin =>
-      {
-        if (string.IsNullOrEmpty(origin))
+      .SetIsOriginAllowed(origin => {
+        if (string.IsNullOrEmpty(origin)) {
           return true;
+        }
 
         return allowedHosts.Contains(origin);
       })

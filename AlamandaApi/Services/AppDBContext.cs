@@ -2,8 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using AlamandaApi.Services.User;
 using AlamandaApi.Services.Team;
 
-namespace AlamandaApi.Data
-{
+namespace AlamandaApi.Data {
   public class AppDbContext : DbContext {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
     
