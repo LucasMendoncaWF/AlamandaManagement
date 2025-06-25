@@ -13,7 +13,7 @@ This is a fullstack project including a .NET backend, a desktop app with Electro
 ## Prerequisites
 - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [Node.js 22+](https://nodejs.org/) 
-- [MongoDB](https://mongodb.com)
+- [MySQL](https://www.mysql.com/)
 
 
 ## Setup
