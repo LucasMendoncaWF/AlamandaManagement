@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AlamandaApi.Services.Team
@@ -14,6 +15,7 @@ namespace AlamandaApi.Services.Team
     }
 
     [HttpPost("")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Create([FromBody] TeamMemberCreationModel member)
     {
       await _teamService.Create(member);
@@ -22,13 +24,9 @@ namespace AlamandaApi.Services.Team
     }
 
     [HttpPut("")]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update([FromBody] TeamMemberModel member)
     {
-      if (member.Id == null)
-      {
-        return BadRequest("Id inválido!");
-      }
-
       var existingUser = await _teamService.GetById(member.Id);
 
       if (existingUser == null)
@@ -39,13 +37,14 @@ namespace AlamandaApi.Services.Team
       await _teamService.Update(member);
       return Ok(new { member });
     }
-        
-        
+
+
     [HttpGet("")]
-    public async Task<IActionResult> GetAll([FromBody] TeamMemberModel member)
+    [AllowAnonymous]
+    public async Task<IActionResult> GetAll()
     {
       var members = await _teamService.GetAll();
-      return Ok(new {members});
+      return Ok(new { members });
     }  
   }
 }

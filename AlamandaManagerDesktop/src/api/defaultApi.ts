@@ -17,7 +17,14 @@ async function refreshAccessToken() {
     body: JSON.stringify({ refreshToken }),
   });
 
-  if (!response.ok) throw new Error('Failed to refresh token');
+  if (!response.ok) {
+    await fetch(`${API_URL}/auth/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ refreshToken }),
+    });
+    throw new Error('Failed to refresh token');
+  }
 
   const data = await response.json();
   const accessToken = data.token;

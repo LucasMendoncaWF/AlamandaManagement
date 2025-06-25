@@ -14,7 +14,7 @@ public static class ImageHandler
   }
   public static string SaveImage(string base64Image, string imageName, string folder)
   {
-    var imageUrl = Environment.GetEnvironmentVariable("IMAGES_FOLDER") ?? "uploads/";
+    var imageUrl = Environment.GetEnvironmentVariable("IMAGES_FOLDER");
     var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", folder);
     Directory.CreateDirectory(uploadsFolder);
 

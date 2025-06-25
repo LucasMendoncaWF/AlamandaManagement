@@ -11,5 +11,5 @@ export interface LoginResponse {
 }
 
 export function userLogIn(body: LoginRequest) {
-  return restApi<LoginResponse>({url: 'auth/login', method: 'POST', body});
+  return restApi<LoginResponse>({url: 'auth/admin', method: 'POST', body});
 }

@@ -12,6 +12,7 @@
     top: 5px;
     animation: appearDown 1s;
     box-shadow: -4px 5px 1px 1px $black;
+    padding-right: 45px;
 
     button {
       background-color: transparent;

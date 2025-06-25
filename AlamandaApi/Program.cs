@@ -1,41 +1,51 @@
+using Microsoft.EntityFrameworkCore;
+using AlamandaApi.Data;
 using AlamandaApi.Services.User;
 using AlamandaApi.Services.Team;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using DotNetEnv;
 
 DotNetEnv.Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-var mongoSettings = new MongoDbSettings
-{
-    ConnectionString = Environment.GetEnvironmentVariable("MONGO_CONNECTION_STRING") ?? "",
-    DatabaseName = Environment.GetEnvironmentVariable("MONGO_DATABASE_NAME") ?? "",
-};
+var dbHost = Environment.GetEnvironmentVariable("MYSQL_HOST");
+var dbUser = Environment.GetEnvironmentVariable("MYSQL_USER");
+var dbPassword = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
+var dbName = Environment.GetEnvironmentVariable("MYSQL_DATABASE");
+
+var connectionString = $"server={dbHost};user={dbUser};password={dbPassword};database={dbName}";
+
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+
+builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<TeamService>();
+
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";
-
-builder.Services.AddSingleton(mongoSettings);
-builder.Services.AddSingleton<UserService>();
-builder.Services.AddSingleton<TeamService>();
-
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+  options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+  options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false;
-    options.SaveToken = true;
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
+  options.RequireHttpsMetadata = false;
+  options.SaveToken = true;
+  options.TokenValidationParameters = new TokenValidationParameters
+  {
+    ValidateIssuerSigningKey = true,
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSecret)),
+    ValidateIssuer = false,
+    ValidateAudience = false
+  };
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+        policy.RequireRole("admin"));
 });
 
 var allowedHostsEnv = Environment.GetEnvironmentVariable("ALLOWED_HOSTS") ?? "";
@@ -46,16 +56,16 @@ builder.Services.AddCors(options =>
   options.AddPolicy("DefaultCorsPolicy", policy =>
   {
     policy
-    .SetIsOriginAllowed(origin =>
-    {
-      if (string.IsNullOrEmpty(origin))
+      .SetIsOriginAllowed(origin =>
       {
-        return true;
-      }
-      return allowedHosts.Contains(origin);
-    })
-    .AllowAnyHeader()
-    .AllowAnyMethod();
+        if (string.IsNullOrEmpty(origin))
+          return true;
+
+        return allowedHosts.Contains(origin);
+      })
+      .AllowAnyHeader()
+      .AllowAnyMethod()
+      .AllowCredentials(); // ✅ importante se usa Authorization com JWT
   });
 });
 
@@ -65,7 +75,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Middleware importante: precisa estar antes do UseAuthentication/UseAuthorization
 app.UseRouting();
 
 app.UseCors("DefaultCorsPolicy");
