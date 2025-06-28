@@ -91,7 +91,7 @@
   import { ListResponse, ApiResponseData } from '@/api/defaultApi';
   import ListItem from './listItem.vue';
   import Loader from '../loader.vue';
-import ListHeader from './listHeader.vue';
+  import ListHeader from './listHeader.vue';
 
   interface Props<T extends ApiResponseData = ApiResponseData> {
     title: string;
