@@ -76,10 +76,12 @@
 
   .page-select-list {
     box-shadow: -2px 3px 4px rgba($secondary, 0.3);
+    display: flex;
+    flex-direction: column-reverse;
     background-color: $white;
-    width: 50px;
+    width: 60px;
     position: absolute;
-    top: 24px;
+    bottom: 26px;
     max-height: 80px;
     overflow: auto;
     border-radius: 5px;
@@ -106,7 +108,7 @@
 </style>
 
 <template>
-  <div v-if="props.totalPages" class="pagination">
+  <div v-if="totalPages && totalPages > 1" class="pagination">
     <div class="pagination-buttons">
       <button 
         @click="() => onChangePage(1)" 
@@ -115,33 +117,33 @@
         <div class="triangle triangle--left"></div>
       </button>
       <button 
-        @click="() => onChangePage(props.currentPage, -1)" 
+        @click="() => onChangePage(currentPage, -1)" 
         class="arrow-button">
         <div class="triangle triangle--left"></div>
       </button>
       <button class="current-page" @click="toggleMenu">
-        {{ props.currentPage }} 
+        {{ currentPage }} 
         <div :class="`triangle triangle--${isMenuOpen ? 'up' : 'down'}`"></div>
       </button>
       <button 
-        @click="() => onChangePage(props.currentPage, 1)" 
+        @click="() => onChangePage(currentPage, 1)" 
         class="arrow-button">
         <div class="triangle triangle--right"></div>
       </button>
       <button 
-        @click="() => onChangePage(props.totalPages)" 
+        @click="() => onChangePage(totalPages)" 
         class="arrow-button arrow-button--right flex">
         <div class="triangle triangle--right"></div>
         <div class="triangle triangle--right"></div>
       </button>
     </div>
-    <div class="page-select-list" v-if="isMenuOpen">
+    <div class="page-select-list" v-on:mouseleave="toggleMenu" v-if="isMenuOpen">
       <button
-        v-for="page in props.totalPages"
+        v-for="page in totalPages"
         :key="page"
         class="page-option"
         :value="page"
-        :selected="page === props.currentPage"
+        :selected="page === currentPage"
         @click="() => onChangePage(page)"
       >
         {{ page }}
@@ -170,8 +172,6 @@ import { ref } from 'vue';
       }
     }
   }
-
-
 
   const toggleMenu = () => {
     isMenuOpen.value = !isMenuOpen.value

@@ -33,9 +33,9 @@
   <div class="search-input">
     <img class="search-icon" :src="searchIcon" alt="search" />
     <input
-      :id="`search-${props.id}`"
+      :id="`search-${id}`"
       @input="onInput"
-      :value="props.modelValue"
+      :value="modelValue"
     />
   </div>
 </template>

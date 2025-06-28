@@ -53,7 +53,7 @@
     <input
       ref="fileInput"
       v-bind="attrs"
-      :id="props.id"
+      :id="id"
       type="file"
       @input="onInput"
     />

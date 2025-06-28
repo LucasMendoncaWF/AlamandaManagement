@@ -52,7 +52,7 @@
 
 <template>
   <div :class="`error-message error-message--${variant}`">
-    {{props.message}} 
+    {{message}} 
     <button @click="onClose"><img alt="close" :src="closeIcon" /></button>
   </div>
 </template>

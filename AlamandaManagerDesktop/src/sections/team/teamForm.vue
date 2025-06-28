@@ -50,7 +50,8 @@
     </div>
 
     <div class="team-submit">
-      <FormSubmit value="Salvar" />
+      <FormSubmit :value="data?.id? 'Salvar' : 'Criar'" />
+      <FormButton @click="onComplete" >Cancelar</FormButton>
     </div>
     <Loader v-if="isLoading"/>
     <ErrorMessage variant="white" :onClose="onCloseErrorMessage" v-if="!!errorMessage" :message="errorMessage" />
@@ -66,7 +67,15 @@
   import { addMember, TeamMemberForm } from '@/api/teamMembers';
   import Loader from '@/components/loader.vue';
   import { fileToBase64 } from '@/utis/converter';
-  import { getErrorMessage } from '@/api/defaultApi';
+  import { getErrorMessage, ApiResponseData } from '@/api/defaultApi';
+  import FormButton from '@/components/forms/formButton.vue';
+  interface Props<T = ApiResponseData> {
+    data?: T;
+    onComplete: () => void;
+  };
+
+  const props = defineProps<Props>();
+
   let timeout: ReturnType<typeof setTimeout>;
   const form = reactive<TeamMemberForm>({
     name: '',
@@ -102,6 +111,7 @@
           submitFile = await fileToBase64(file);
         }
         await addMember({...form, picture: submitFile});
+        props.onComplete();
       } catch (error) {
         errorMessage.value = getErrorMessage(error);
         isLoading.value = false;

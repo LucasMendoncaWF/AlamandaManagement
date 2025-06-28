@@ -18,4 +18,10 @@ namespace AlamandaApi.Services.Team {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
   }
+
+  public class PagedResult<T> {
+    public List<T> Items { get; set; } = [];
+    public int TotalPages { get; set; }
+    public int CurrentPage { get; set; }
+  }
 }

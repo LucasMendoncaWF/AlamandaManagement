@@ -38,10 +38,10 @@ namespace AlamandaApi.Services.Team {
 
     [HttpGet("")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAll() {
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, string queryString = "") {
       try {
-        var members = await _teamService.GetAll();
-        return Ok(new { members });
+        var result = await _teamService.GetAll(page, pageSize, queryString);
+        return Ok(result);
       } catch (Exception ex) {
         return BadRequest(new { ex.Message });
       }

@@ -1,12 +1,24 @@
 const API_URL = import.meta.env.VITE_API_URL;
 type Method = 'POST' | 'GET' | 'PUT' | 'DELETE';
 
-interface RestRequest {
+export type ResponseKeyType = string | number | Date;
+export type ResponseObjectKeysTypes = Record<string, ResponseKeyType>;
+export interface ApiResponseData extends ResponseObjectKeysTypes {
+  id: number;
+}
+
+interface RestRequest<P = Record<string, any>> {
   url: string;
   method?: Method;
   body?: object;
-  params?: string;
+  params?: P;
   headers?: HeadersInit;
+}
+
+export interface ListResponse<T extends ApiResponseData>{
+  items: Array<T>;
+  totalPages: number;
+  currentPage: number;
 }
 
 async function refreshAccessToken() {

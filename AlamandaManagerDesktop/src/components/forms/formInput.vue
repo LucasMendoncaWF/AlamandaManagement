@@ -30,12 +30,12 @@
 
 <template>
   <div :class="`form-input form-input--${variant}`">
-    <label :for="props.id">{{ props.label }}</label>
+    <label :for="id">{{ label }}</label>
     <input
-      :id="props.id"
+      :id="id"
       v-bind="attrs"
       @input="onInput"
-      :value="props.modelValue"
+      :value="modelValue"
     />
   </div>
 </template>

@@ -4,11 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace AlamandaApi.Services.Team {
   public class TeamService {
       private readonly AppDbContext _context;
-      private readonly string _imageBaseUrl;
 
       public TeamService(AppDbContext context) {
         _context = context;
-        _imageBaseUrl = Environment.GetEnvironmentVariable("IMAGES_FOLDER") ?? "";
       }
 
       public async Task Create(TeamMemberCreationModel member) {
@@ -25,7 +23,14 @@ namespace AlamandaApi.Services.Team {
         await _context.SaveChangesAsync();
 
         if (!string.IsNullOrEmpty(member.Picture) && FieldValidator.IsBase64String(member.Picture)) {
-          var savedImagePath = ImageHandler.SaveImage(member.Picture, newMember.Id.ToString(), "team");
+          var savedImagePath = await ImageHandler.SaveImage(member.Picture,
+            new ImageHandler.ImageSaveOptions {
+              Name = newMember.Id.ToString(),
+              Folder = "team",
+              Quality = 50,
+              MaxWidth = 300,
+            }
+          );
           newMember.Picture = savedImagePath;
 
           _context.TeamMembers.Update(newMember);
@@ -41,13 +46,17 @@ namespace AlamandaApi.Services.Team {
       }
         
       if (!string.IsNullOrEmpty(member.Picture) && member.Picture.StartsWith("data:image")) {
-        if (!string.IsNullOrEmpty(existingMember.Picture) && existingMember.Picture.StartsWith(_imageBaseUrl)) {
-          var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", existingMember.Picture.TrimStart('/'));
-          if (File.Exists(oldFilePath)) {
-              File.Delete(oldFilePath);
-          }
+        if (!string.IsNullOrEmpty(existingMember.Picture) && File.Exists(existingMember.Picture)) {
+          File.Delete(existingMember.Picture);
         }
-        existingMember.Picture = ImageHandler.SaveImage(member.Picture, member.Id.ToString(), "team");
+        existingMember.Picture = await ImageHandler.SaveImage(member.Picture, 
+          new ImageHandler.ImageSaveOptions {
+            Name = member.Id.ToString(),
+            Folder = "team",
+            Quality = 50,
+            MaxWidth = 300,
+          }
+        );
       }
 
       existingMember.Name = member.Name;
@@ -55,9 +64,29 @@ namespace AlamandaApi.Services.Team {
       _context.TeamMembers.Update(existingMember);
       await _context.SaveChangesAsync();
     }
+    
 
-    public async Task<List<TeamMemberModel>> GetAll() {
-      return await _context.TeamMembers.AsNoTracking().ToListAsync();
+    public async Task<PagedResult<TeamMemberModel>> GetAll(int page = 1, int pageSize = 10, string queryString = "") {
+      var query = _context.TeamMembers.AsNoTracking();
+      if (!string.IsNullOrWhiteSpace(queryString)) {
+        queryString = queryString.Trim().ToLower();
+        query = query.Where(m =>
+          m.Name.ToLower().Contains(queryString) ||
+          m.Social.ToLower().Contains(queryString));
+      }
+      var totalItems = await query.CountAsync();
+      var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
+
+      var items = await query
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .ToListAsync();
+
+      return new PagedResult<TeamMemberModel>{
+        Items = items,
+        TotalPages = totalPages,
+        CurrentPage = page
+      };
     }
 
     public async Task<TeamMemberModel?> GetBySocial(string social) {

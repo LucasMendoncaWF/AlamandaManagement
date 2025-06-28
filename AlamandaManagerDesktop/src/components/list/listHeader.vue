@@ -1,87 +1,60 @@
 <style lang="scss" scoped>
   @use '@/assets/variables.scss' as *;
-
-  .list-header {
-    width: 100%;
-    padding: 20px;
-    background-color: $primary;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 40px;
-
-    h1 {
-      margin: 0;
-      color: $white;
-    }
-
-    .filter-icon {
-      width: 20px;
-      height: 20px;
-    }
-
-    .search-area {
-      display: flex;
-
-      button {
-        background-color: transparent;
-        border: none;
-        margin-left: 5px;
-        cursor: pointer;
-
-        &:hover {
-          transform: scale(1.05);
-        }
-      }
-    }
+  thead {
+    background-color: $secondary;
+    margin: 0;
+    position: sticky;
+    top: 0;
+  }
+  th {
+    padding: 8px 10px;
+    text-transform: uppercase;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 1.5px;
+    color: $white;
   }
 </style>
 
 <template>
-  <div class="list-header">
-    <h1>{{ title }}</h1>
+  <thead>
+    <th>id</th>
 
-    <div class="search-area">
-      <SearchInput :id="title.toLowerCase()" v-model="searchQuery" />
-      <button @click="handleFilter">
-        <img class="filter-icon" :src="filterIcon" alt="filter" />
-      </button>
-    </div>
-  </div>
-  <Filters :onClickClose="closeFilter" v-if="isFilterOpen" />
+    <th v-if="imageField" class="image-td">
+      {{ imageField }}
+    </th>
+
+    <th
+      v-for="key in restFields"
+      :key="key"
+    >
+      {{ key }}
+    </th>
+
+    <th></th>
+    <th></th>
+  </thead>
 </template>
 
 <script lang="ts" setup>
-  import Filters from './filters.vue';
-  import SearchInput from '@/components/forms/searchInput.vue';
-  import { defineProps, ref, watch } from 'vue';
-  const filterIcon = new URL('@/assets/icons/icon_filter.svg', import.meta.url).href;
-  interface Props {
-    title: string;
-    onSearch: (search: string) => void;
-    onFilter: () => void;
+  import { computed } from 'vue';
+  import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
+
+  interface Props<T = ApiResponseData> {
+    item: T;
   }
 
-  const isFilterOpen = ref(false);
-  const searchQuery = ref('');
   const props = defineProps<Props>();
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-  const handleFilter = () => {
-    isFilterOpen.value = !isFilterOpen.value;
-  }
+  const isImageUrl = (value: ResponseKeyType): boolean =>
+    typeof value === 'string' && /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(value);
 
-  const closeFilter = () => {
-    isFilterOpen.value = false;
-  }
+  const imageField = computed(() => {
+    return Object.keys(props.item).find((key) => isImageUrl(props.item[key]));
+  });
 
-  watch(searchQuery, (newVal) => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-
-    debounceTimer = setTimeout(() => {
-      props.onSearch(newVal);
-    }, 100);
+  const restFields = computed(() => {
+    return Object.keys(props.item)
+      .filter((key) => key !== 'id' && key !== imageField.value);
   });
 </script>

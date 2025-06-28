@@ -1,6 +1,6 @@
 <style lang="scss" scoped>
   @use '@/assets/variables.scss' as *;
-  .form-submit {
+  .form-button {
     background-color: $secondary;
     color: $white;
     padding: 13.5px;
@@ -30,7 +30,7 @@
 </style>
 
 <template>
-  <input type="submit" class="form-submit" v-bind="attrs" @click="onClick"/>
+  <button type="button" class="form-button" v-bind="attrs" @click="onClick"><slot/></button>
 </template>
 
 <script lang="ts" setup>

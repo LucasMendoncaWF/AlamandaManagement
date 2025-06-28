@@ -1,4 +1,4 @@
-import { restApi } from "./defaultApi";
+import { ListResponse, ApiResponseData, restApi } from "./defaultApi";
 
 export interface TeamMemberForm {
   name: string;
@@ -12,7 +12,23 @@ export interface TeamMemberFormSubmit {
   picture: string | null;
 }
 
+export interface TeamMemberResponse extends ApiResponseData {
+  id: number;
+  name: string;
+  social: string;
+  picture: string;
+}
 
-export function addMember(body: TeamMemberFormSubmit) {
-  return restApi<TeamMemberForm>({url: 'team', method: 'POST', body});
+export interface TeamMemberFilters {
+  page: number;
+  queryString: string;
+}
+
+
+export async function addMember(body: TeamMemberFormSubmit) {
+  return await restApi<TeamMemberForm>({url: 'team', method: 'POST', body});
+}
+
+export async function getMembers(filters: TeamMemberFilters) {
+  return await restApi<ListResponse<TeamMemberResponse>>({url: 'team', method: 'GET', params: filters});
 }

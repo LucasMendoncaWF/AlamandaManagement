@@ -37,6 +37,7 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "dependencies": {
+    "@tanstack/vue-query": "^5.81.5",
     "electron-squirrel-startup": "^1.0.1",
     "pinia": "^3.0.3",
     "pinia-plugin-persistedstate": "^4.3.0",
