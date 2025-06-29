@@ -61,7 +61,6 @@
               :key="item.id"
               :item="item"
               :onClickEdit="() => onClickEdit(item.id)"
-              :onClickDelete="() => onClickDelete(item.id)"
             />
           </tr>
         </tbody>

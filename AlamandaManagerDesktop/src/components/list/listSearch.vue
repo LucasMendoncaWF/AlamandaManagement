@@ -22,6 +22,7 @@
 
     .search-area {
       display: flex;
+      align-items: center;
 
       button {
         background-color: transparent;
@@ -31,6 +32,12 @@
 
         &:hover {
           transform: scale(1.05);
+        }
+
+        img {
+          width: 30px;
+          display: flex;
+          align-items: center;
         }
       }
     }
@@ -42,13 +49,14 @@
     <h1>{{ title }}</h1>
 
     <div class="search-area">
-      <button @click="onClickCreate">+</button>
+      <button @click="onClickCreate"><img :src="addIcon" alt="add" /></button>
       <SearchInput placeholder="Search..." :id="title.toLowerCase()" v-model="searchQuery" />
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
+  const addIcon = new URL('@/assets/icons/icon_add.svg', import.meta.url).href;
   import SearchInput from '@/components/forms/searchInput.vue';
   import { defineProps, ref, watch } from 'vue';
 
