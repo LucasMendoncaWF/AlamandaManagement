@@ -19,7 +19,6 @@
 <template>
   <thead>
     <th></th>
-    <th></th>
     <th v-if="imageField" class="image-td">
       {{ imageField }}
     </th>
@@ -52,6 +51,6 @@
 
   const restFields = computed(() => {
     return Object.keys(props.item)
-      .filter((key) => key !== 'id' && key !== imageField.value);
+      .filter((key) => !key.toLowerCase().includes('id') && key !== imageField.value);
   });
 </script>

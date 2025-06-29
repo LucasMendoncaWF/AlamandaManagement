@@ -1,5 +1,5 @@
 import { FormFieldModel } from "@/models/formFieldModel";
-import { ListResponse, ApiResponseData, restApi } from "./defaultApi";
+import { ListResponse, ApiResponseData, restApi, QueryParams } from "./defaultApi";
 
 export interface TeamMemberForm {
   name: string;
@@ -20,18 +20,16 @@ export interface TeamMemberResponse extends ApiResponseData {
   picture: string;
 }
 
-export interface TeamMemberFilters {
-  page: number;
-  queryString: string;
-}
-
-
 export async function addMember(body: TeamMemberFormSubmit) {
   return await restApi<TeamMemberForm>({url: 'team', method: 'POST', body});
 }
 
-export async function getMembers(filters: TeamMemberFilters) {
-  return await restApi<ListResponse<TeamMemberResponse>>({url: 'team', method: 'GET', params: filters});
+export async function updateMember(body: TeamMemberFormSubmit) {
+  return await restApi<TeamMemberForm>({url: 'team', method: 'PUT', body});
+}
+
+export async function getMembers(params: QueryParams) {
+  return await restApi<ListResponse<TeamMemberResponse>>({url: 'team', method: 'GET', params});
 }
 
 export async function getMembersFields() {

@@ -36,6 +36,7 @@
       :id="`search-${id}`"
       @input="onInput"
       :value="modelValue"
+      :placeholder="placeholder"
     />
   </div>
 </template>
@@ -45,10 +46,9 @@
   interface Props {
     modelValue: string;
     id: string;
+    placeholder: string;
   }
- 
-  const props = defineProps<Props>();
-
+  defineProps<Props>();
   const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void
   }>();

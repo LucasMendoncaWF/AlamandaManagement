@@ -64,5 +64,5 @@
     onClose: () => void;
     variant?: 'white';
   }
-  const props = defineProps<Props>();
+  defineProps<Props>();
 </script>

@@ -4,6 +4,7 @@
 .form-input {
   color: $white;
   margin: 10px 0;
+  text-transform: capitalize;
 
   .options-box {
     background-color: $white;

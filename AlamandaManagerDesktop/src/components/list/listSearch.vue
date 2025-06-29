@@ -42,7 +42,8 @@
     <h1>{{ title }}</h1>
 
     <div class="search-area">
-      <SearchInput :id="title.toLowerCase()" v-model="searchQuery" />
+      <button @click="onClickCreate">+</button>
+      <SearchInput placeholder="Search..." :id="title.toLowerCase()" v-model="searchQuery" />
     </div>
   </div>
 </template>
@@ -50,14 +51,11 @@
 <script lang="ts" setup>
   import SearchInput from '@/components/forms/searchInput.vue';
   import { defineProps, ref, watch } from 'vue';
-  interface WithId {
-    id: string | number;
-  }
 
-  interface Props<T extends WithId = WithId> {
+  interface Props {
     title: string;
     onSearch: (search: string) => void;
-    onFilter: (data: T) => void;
+    onClickCreate: () => void;
   };
 
   const props = defineProps<Props>();
@@ -70,6 +68,6 @@
 
     debounceTimer = setTimeout(() => {
       props.onSearch(newVal);
-    }, 100);
+    }, 1000);
   });
 </script>

@@ -31,27 +31,33 @@
 
 <template>
   <div :class="`form-input form-input--${variant}`">
-    <label :for="id">{{ label }}</label>
-    <input
+    <label :for="id">{{ label.replace('id', '') }}</label>
+    <select
       :id="id"
       v-bind="attrs"
       @input="onInput"
       :value="modelValue"
-    />
+    >
+      <option v-for="option of options" :value="option.id">
+        {{ option.name }}
+      </option>
+    </select>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { useAttrs } from 'vue';
+  import { FormFieldOptionModel } from '@/models/formFieldModel';
+import { useAttrs } from 'vue';
 
   interface Props {
     modelValue?: string;
     label: string;
     id: string;
-    variant?: 'inverted'
+    variant?: 'inverted';
+    options: FormFieldOptionModel[];
   }
  
-  const props = defineProps<Props>();
+  defineProps<Props>();
   const attrs = useAttrs();
 
   const emit = defineEmits<{

@@ -10,7 +10,8 @@ namespace AlamandaApi.Services.FieldsSchema {
     Date = 2,
     Image = 3,
     ImageArray = 4,
-    OptionsArray = 5
+    OptionsArray = 5,
+    Options = 6
   }
 
   public class FieldInfo {
@@ -42,6 +43,28 @@ namespace AlamandaApi.Services.FieldsSchema {
       if (conn.State != ConnectionState.Open)
         await conn.OpenAsync();
 
+      await using (var relCmd = conn.CreateCommand()) {
+        relCmd.CommandText = @"
+          SELECT rel.TABLE_NAME, rel.COLUMN_NAME, rel.REFERENCED_TABLE_NAME
+          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE rel
+          WHERE rel.REFERENCED_TABLE_NAME = @currentTable AND rel.TABLE_SCHEMA = DATABASE();";
+
+        var relParam = relCmd.CreateParameter();
+        relParam.ParameterName = "@currentTable";
+        relParam.Value = tableName;
+        relCmd.Parameters.Add(relParam);
+
+        await using var relReader = await relCmd.ExecuteReaderAsync();
+        while (await relReader.ReadAsync()) {
+          var junction = relReader.GetString(0);
+          var fk = relReader.GetString(1);
+          foundJunctions.TryAdd(junction, fk);
+        }
+        relReader.Close();
+      }
+
+      var junctionTables = new HashSet<string>(foundJunctions.Keys.Select(k => k.ToLower()));
+
       await using (var cmd = conn.CreateCommand()) {
         cmd.CommandText = @"
           SELECT 
@@ -69,51 +92,34 @@ namespace AlamandaApi.Services.FieldsSchema {
           var sqlType = reader.GetString(1).ToLower();
           var maxLength = reader.IsDBNull(2) ? null : reader.GetValue(2).ToString();
           var columnType = reader.GetString(3).ToLower();
-          var isNullable = reader.GetString(4).ToLower() == "no" ? true : false;
+          var isNullable = reader.GetString(4).Equals("YES", StringComparison.OrdinalIgnoreCase);
           var fkTable = reader.IsDBNull(5) ? null : reader.GetString(5);
+          var isForeignKey = fkTable != null;
+          var isJunction = fkTable != null && junctionTables.Contains(fkTable.ToLower());
 
-          var inferredType = InferType(name.ToLower(), sqlType, columnType, fkTable);
+          var inferredType = InferType(name.ToLower(), sqlType, columnType, isForeignKey, isJunction);
 
-          if (name != "Id") {
+          if (name.ToLower() != "id") {
             fields.Add(new FieldInfo {
               FieldName = name.ToLower(),
               DataType = inferredType,
               FieldMaxSize = maxLength,
               OptionsArray = null,
-              IsRequired = isNullable
+              IsRequired = !isNullable
             });
           }
 
-          if (inferredType == FieldDataType.OptionsArray && fkTable != null)
+          if ((inferredType == FieldDataType.Options || inferredType == FieldDataType.OptionsArray) && fkTable != null)
             foreignKeys[name.ToLower()] = fkTable;
         }
         reader.Close();
       }
 
       foreach (var field in fields) {
-        if (field.DataType == FieldDataType.OptionsArray && foreignKeys.TryGetValue(field.FieldName, out var fkTable)) {
+        if ((field.DataType == FieldDataType.Options || field.DataType == FieldDataType.OptionsArray)
+            && foreignKeys.TryGetValue(field.FieldName, out var fkTable)) {
           field.OptionsArray = await GetOptions(fkTable);
         }
-      }
-
-      await using (var relCmd = conn.CreateCommand()) {
-        relCmd.CommandText = @"
-          SELECT rel.TABLE_NAME, rel.COLUMN_NAME, rel.REFERENCED_TABLE_NAME
-          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE rel
-          WHERE rel.REFERENCED_TABLE_NAME = @currentTable AND rel.TABLE_SCHEMA = DATABASE();";
-
-        var relParam = relCmd.CreateParameter();
-        relParam.ParameterName = "@currentTable";
-        relParam.Value = tableName;
-        relCmd.Parameters.Add(relParam);
-
-        await using var relReader = await relCmd.ExecuteReaderAsync();
-        while (await relReader.ReadAsync()) {
-          var junction = relReader.GetString(0);
-          var fk = relReader.GetString(1);
-          foundJunctions.TryAdd(junction, fk);
-        }
-        relReader.Close();
       }
 
       foreach (var junction in foundJunctions.Keys) {
@@ -148,8 +154,8 @@ namespace AlamandaApi.Services.FieldsSchema {
       return fields;
     }
 
-    private static FieldDataType InferType(string name, string sqlType, string columnType, string? fkTable) {
-      if (!string.IsNullOrEmpty(fkTable)) return FieldDataType.OptionsArray;
+    private static FieldDataType InferType(string name, string sqlType, string columnType, bool isForeignKey, bool isJunction) {
+      if (isForeignKey) return isJunction ? FieldDataType.OptionsArray : FieldDataType.Options;
       if (name.Contains("pictures") && columnType.StartsWith("json")) return FieldDataType.ImageArray;
       if (name.Contains("picture")) return FieldDataType.Image;
       if (sqlType.Contains("int") || sqlType is "decimal" or "float" or "double") return FieldDataType.Number;
@@ -166,7 +172,6 @@ namespace AlamandaApi.Services.FieldsSchema {
 
       await using var cmd = conn.CreateCommand();
       cmd.CommandText = $"SELECT * FROM `{table}` LIMIT 100;";
-
       await using var reader = await cmd.ExecuteReaderAsync();
       while (await reader.ReadAsync()) {
         var id = Try(reader, "id");

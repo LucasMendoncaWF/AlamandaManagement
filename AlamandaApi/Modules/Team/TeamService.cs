@@ -11,11 +11,6 @@ namespace AlamandaApi.Services.Team {
     }
 
     public async Task Create(TeamMemberCreationModel member) {
-      var exists = await _context.TeamMembers
-        .AsNoTracking()
-        .AnyAsync(m => m.Social == member.Social);
-      if (exists) throw new Exception("Usuário com esta rede social já cadastrado.");
-
       var newMember = ObjectMapperUtil.CopyWithCapitalization<TeamMemberCreationModel, TeamMemberModel>(member);
       newMember.Picture = "";
 
@@ -46,19 +41,15 @@ namespace AlamandaApi.Services.Team {
       var existing = await _context.TeamMembers
         .Include(m => m.Comics)
         .FirstOrDefaultAsync(m => m.Id == member.Id);
-      if (existing == null) throw new Exception("Membro não encontrado.");
+      if (existing == null) throw new Exception("Member not found.");
 
-      if (!string.IsNullOrEmpty(member.Picture) && member.Picture.StartsWith("data:image")) {
-        if (!string.IsNullOrEmpty(existing.Picture) && File.Exists(existing.Picture)) {
-          File.Delete(existing.Picture);
-        }
-        existing.Picture = await ImageHandler.SaveImage(member.Picture, new ImageHandler.ImageSaveOptions {
-          Name = member.Id.ToString(),
-          Folder = "team",
-          Quality = 50,
-          MaxWidth = 300,
-        });
-      }
+      existing.Picture = await ImageHandler.SaveImage(member.Picture, new ImageHandler.ImageSaveOptions {
+        Name = member.Id.ToString(),
+        Folder = "team",
+        Quality = 50,
+        MaxWidth = 300,
+        PreviousImage = existing.Picture,
+      });
 
       if (member.ComicsIds?.Any() == true) {
         var relatedComics = await _context.Comics
@@ -77,6 +68,7 @@ namespace AlamandaApi.Services.Team {
     public async Task<PagedResult<TeamMemberModel>> GetAll(int page = 1, int pageSize = 10, string query = "") {
       var teamQuery = _context.TeamMembers
         .Include(t => t.Comics)
+        .Include(t => t.Role)
         .AsNoTracking();
 
       if (!string.IsNullOrWhiteSpace(query)) {
@@ -97,10 +89,15 @@ namespace AlamandaApi.Services.Team {
           Name = t.Name,
           Social = t.Social,
           Picture = t.Picture,
+          RoleId = t.RoleId,
           Comics = t.Comics.Select(c => new ComicModel {
             Id = c.Id,
             Name = c.Name
-          }).ToList()
+          }).ToList(),
+          Role = t.Role == null ? null : new RoleModel {
+            Id = t.Role.Id,
+            Name = t.Role.Name
+          }
         })
         .ToListAsync();
 

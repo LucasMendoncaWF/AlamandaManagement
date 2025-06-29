@@ -1,15 +1,17 @@
 <template>
   <List
-    title="Time"
-    emptyMessage="Nenhum membro encontrado com esses filtros"
-    errorMessage="Ocorreu um erro durante a busca de membros"
+    title="Team"
+    emptyMessage="No members were found with this search"
+    errorMessage="An Error Occurred while searching for members"
+    :maxImageSize="200"
     :searchFunction="getMembers"
     :getFieldFunction="getMembersFields"
     :addItemFunction="addMember"
+    :updateItemFunction="updateMember"
   />
 </template>
 
 <script setup>
   import List from '@/components/list/list.vue';
-  import { getMembers, getMembersFields, addMember } from '@/api/teamMembers';
+  import { getMembers, getMembersFields, addMember, updateMember } from '@/api/teamMembers';
 </script>

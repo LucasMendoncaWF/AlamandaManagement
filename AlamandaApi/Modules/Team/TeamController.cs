@@ -23,7 +23,7 @@ namespace AlamandaApi.Services.Team {
         return Ok(new { newMember });
       }
       catch (Exception ex) {
-        return BadRequest(new { ex.Message });
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
       }
     }
 
@@ -36,7 +36,7 @@ namespace AlamandaApi.Services.Team {
         return Ok(new { member });
       }
       catch (Exception ex) {
-        return BadRequest(new { ex.Message });
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
       }
     }
 
@@ -49,7 +49,7 @@ namespace AlamandaApi.Services.Team {
         return Ok(result);
       }
       catch (Exception ex) {
-        return BadRequest(new { ex.Message });
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
       }
     }  
     
@@ -61,7 +61,7 @@ namespace AlamandaApi.Services.Team {
         return Ok(result);
       }
       catch {
-        return BadRequest("An error happend when trying to fetch fields");
+        return BadRequest("An error happened when trying to fetch fields");
       }
     }  
   }

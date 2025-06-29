@@ -53,27 +53,27 @@ import urls from '@/router/urls';
   }
   const icons: IconModel[] = [
     {
-      label: 'Pedidos',
+      label: 'Orders',
       url: urls.home,
       image: new URL('@/assets/icons/icon_orders.svg', import.meta.url).href
     },
     {
-      label: 'Quadrinhos',
+      label: 'Comics',
       url: '/',
       image: new URL('@/assets/icons/icon_library.svg', import.meta.url).href
     },
     {
-      label: 'Usuários',
+      label: 'Users',
       url: urls.users,
       image: new URL('@/assets/icons/icon_users.svg', import.meta.url).href
     },
     {
-      label: 'Time',
+      label: 'Team',
       url: urls.team,
       image: new URL('@/assets/icons/icon_team.svg', import.meta.url).href
     },
     {
-      label: 'Artes',
+      label: 'Arts',
       url: urls.arts,
       image: new URL('@/assets/icons/icon_art.svg', import.meta.url).href
     }

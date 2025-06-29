@@ -5,24 +5,33 @@ using AlamandaApi.Services.Comics;
 namespace AlamandaApi.Services.Team {
 
   public class TeamMemberBaseModel {
-    [Required(ErrorMessage = "Name é obrigatório")]
-    [MaxLength(100, ErrorMessage = "Name pode ter no máximo 100 caracteres")]
+    [Required]
+    [MaxLength(100)]
     public string Name { get; set; } = null!;
 
-    [MaxLength(50, ErrorMessage = "Social pode ter no máximo 50 caracteres")]
+    [MaxLength(50)]
     public string Social { get; set; } = null!;
 
     public string? Picture { get; set; } = "user";
+    public RoleModel? Role { get; set; }
+    public virtual int? RoleId { get; set; } = null;
   }
   public class TeamMemberCreationModel : TeamMemberBaseModel {
     public virtual List<string> ComicsIds { get; set; } = new List<string>();
   }
   
-  public class TeamMemberEditModel : TeamMemberBaseModel {
+  public class TeamMemberEditModel : TeamMemberCreationModel {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public virtual List<string> ComicsIds { get; set; } = new List<string>();
+  }
+
+  public class RoleModel {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+
+    public string Name { get; set; } = null!;
   }
 
 

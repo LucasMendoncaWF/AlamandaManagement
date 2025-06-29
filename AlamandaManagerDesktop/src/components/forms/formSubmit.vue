@@ -30,15 +30,10 @@
 </style>
 
 <template>
-  <input type="submit" class="form-submit" v-bind="attrs" @click="onClick"/>
+  <input type="submit" class="form-submit" v-bind="attrs"/>
 </template>
 
 <script lang="ts" setup>
   import { useAttrs } from 'vue';
-  interface Props {
-    onClick?: () => void;
-  }
-
-  const props = defineProps<Props>();
   const attrs = useAttrs();
 </script>

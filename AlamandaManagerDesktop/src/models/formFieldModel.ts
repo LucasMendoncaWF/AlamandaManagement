@@ -17,5 +17,6 @@ export enum FieldDataTypeEnum {
   Date = 2,
   Image = 3,
   ImageArray = 4,
-  OptionsArray = 5
+  OptionsArray = 5,
+  Options = 6
 }

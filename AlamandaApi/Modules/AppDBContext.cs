@@ -11,6 +11,7 @@ namespace AlamandaApi.Data {
     public DbSet<TeamMemberModel> TeamMembers { get; set; }
     public DbSet<RefreshTokenModel> RefreshTokens { get; set; }
     public DbSet<ComicModel> Comics { get; set; }
+    public DbSet<RoleModel> Roles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       base.OnModelCreating(modelBuilder);
@@ -23,6 +24,12 @@ namespace AlamandaApi.Data {
            j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId"),
            j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
        );
+
+      modelBuilder.Entity<TeamMemberModel>()
+        .HasOne(tm => tm.Role)
+        .WithMany()
+        .HasForeignKey(tm => tm.RoleId)
+        .OnDelete(DeleteBehavior.SetNull);
     }
   }
 }

@@ -18,7 +18,7 @@ namespace AlamandaApi.Services.User {
 
     public async Task<object?> RegisterUserAsync(RegisterRequest request) {
       if (await GetByEmail(request.Email) != null) {
-        throw new Exception("Usuário ja cadastrado");
+        throw new Exception("User already exists");
       }
 
       using var transaction = await _context.Database.BeginTransactionAsync();
@@ -40,7 +40,7 @@ namespace AlamandaApi.Services.User {
     public async Task<object?> LoginUserAsync(LoginRequest request) {
       var user = await GetByEmail(request.Email);
       if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password)) {
-        throw new Exception("Verifique suas credenciais e tente novamente");
+        throw new Exception("Verify your credentials and try again");
       }
       return await GenerateAuthResponse(user);
     }
@@ -48,7 +48,7 @@ namespace AlamandaApi.Services.User {
     public async Task<object?> LoginAdminAsync(LoginRequest request) {
       var user = await GetByEmail(request.Email);
       if (user == null || user.Permission != "admin" || !BCrypt.Net.BCrypt.Verify(request.Password, user.Password)) {
-        throw new Exception("Verifique suas credenciais e tente novamente");
+        throw new Exception("Verify your credentials and try again");
       }
       return await GenerateAuthResponse(user);
     }
@@ -56,20 +56,20 @@ namespace AlamandaApi.Services.User {
 
     public async Task<object?> RefreshTokenAsync(string refreshToken) {
       if (string.IsNullOrWhiteSpace(refreshToken)) {
-        throw new Exception("Refresh Token Inválido");
+        throw new Exception("Invalid Refresh Token");
       }
         
       var user = await GetByRefreshToken(refreshToken);
       var oldToken = await GetRefreshToken(refreshToken);
       if (oldToken == null) {
-        throw new Exception("Refresh Token Inválido");
+        throw new Exception("Invalid Refresh Token");
       }
         
       _context.RefreshTokens.Remove(oldToken);
       await _context.SaveChangesAsync();
 
       if (user == null || oldToken.Expires <= DateTime.UtcNow) {
-        throw new Exception("Refresh Token Expirado");
+        throw new Exception("Expired Refresh Token");
       }
 
       var newToken = GenerateRefreshToken(user.Id);
@@ -82,15 +82,15 @@ namespace AlamandaApi.Services.User {
 
     public async Task<object?> LogoutAsync(string refreshToken) {
       if (string.IsNullOrWhiteSpace(refreshToken)) {
-        throw new Exception("Refresh Token inválido");
+        throw new Exception("Invalid Refresh Token");
       }
       var tokenEntity = await GetRefreshToken(refreshToken);
       if (tokenEntity == null) {
-        throw new Exception("Refresh Token inválido");
+        throw new Exception("Invalid Refresh Token");
       }
       await RemoveRefreshToken(tokenEntity);
       return new {
-        message = "Logout Efetuado"
+        message = "Logout succeed"
       };
     }
 

@@ -37,14 +37,18 @@
 
 <template>
   <div class="list">
-    <ListSearch :onSearch="onSearch" :onFilter="onFilterChange" :title="title" />
+    <ListSearch :onClickCreate="onOpenForm" :onSearch="onSearch" :title="title" />
     <ListForm 
-      :onCancel="onCancelEdit" 
+      :onCancel="onCancelEdit"
       :addItem="addItemFunction" 
+      :updateItem="updateItemFunction"
+      :onComplete="onCompleteUpdating"
+      :isFormOpen="isFormOpen"
       :fields="fields" 
-      :onComplete="refetch"
+      :maxImageSize="maxImageSize"
+      :data="data?.items.find(item => editId === item.id)"
     />
-    <div class="list-scroll">
+    <div class="list-scroll" v-if="!isError && !(data && !data.items.length)">
       <table class="list-table">
         <ListHeader v-if="data && data.items.length" :item="data.items[0]" />
         <tbody >
@@ -54,21 +58,11 @@
             class="list-item"
           >
             <ListItem
-              v-if="editId !== item.id"
               :key="item.id"
               :item="item"
               :onClickEdit="() => onClickEdit(item.id)"
               :onClickDelete="() => onClickDelete(item.id)"
             />
-            <td colspan="10" v-if="editId === item.id">
-              <ListForm 
-                :onCancel="onCancelEdit" 
-                :addItem="addItemFunction" 
-                :fields="fields" 
-                :data="item" 
-                :onComplete="refetch"
-              />
-            </td>
           </tr>
         </tbody>
       </table>
@@ -93,7 +87,7 @@
   import { ref } from 'vue';
   import queryKeys from '@/api/queryKeys';
   import { useQuery } from '@tanstack/vue-query';
-  import { ListResponse, ApiResponseData } from '@/api/defaultApi';
+  import { ListResponse, ApiResponseData, QueryParams } from '@/api/defaultApi';
   import ListItem from './listItem.vue';
   import Loader from '../loader.vue';
   import ListHeader from './listHeader.vue';
@@ -104,28 +98,33 @@
     title: string;
     emptyMessage: string;
     errorMessage: string;
-    searchFunction: (queryString: string) => ListResponse<T>;
+    maxImageSize: number;
+    searchFunction: (params: QueryParams) => ListResponse<T>;
     addItemFunction: (data: Object) => void;
     getFieldFunction: () => FormFieldModel[];
+    updateItemFunction: (data: Object) => void;
   }
 
   const props = defineProps<Props>();
   const currentPage = ref(1);
+  const isFormOpen = ref(false);
   const queryString = ref('');
   const editId = ref<number | null>(null);
   const deleteId = ref<number | null>(null);
 
-  const onFilterChange = () => {
-
-  }
-
-  const onSearch = () => {
-
+  const onSearch = (value: string) => {
+    queryString.value = value;
+    refetch();
   }
 
   const onClickEdit = (id?: number) => {
     if(!id) { return }
     editId.value = id;
+    onOpenForm();
+  }
+
+  const onOpenForm = () => {
+    isFormOpen.value = true;
   }
 
   const onClickDelete = (id?: number) => {
@@ -135,16 +134,22 @@
 
   const onCancelEdit = () => {
     editId.value = null;
+    isFormOpen.value = false;
   }
 
   const onChangePage = (page: number) => {
     currentPage.value = page;
   }
 
+  const onCompleteUpdating = () => {
+    refetch();
+    onCancelEdit();
+  }
+
     const { isPending, isError, data, refetch } = useQuery({
     queryKey: [queryKeys.List, {title: props.title, queryString: queryString.value}],
     async queryFn() {
-      return await props.searchFunction(queryString.value);
+      return await props.searchFunction({queryString: queryString.value, page: currentPage.value});
     }
   });
 

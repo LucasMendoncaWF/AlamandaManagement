@@ -1,6 +1,7 @@
 <style lang="scss" scoped>
+  @use '@/assets/variables.scss' as *;
   td {
-    padding: 4px 10px;
+    padding: 10px;
     
     > div {
       min-width: 100px;
@@ -12,15 +13,16 @@
 
     &.image-td {
       width: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     &.button-td {
+      position: relative;
       padding: 0;
       width: 20px;
-
-      &:first-of-type {
-        padding-left: 10px;
-      }
+      padding-left: 10px;
 
       button {
         padding: 0;
@@ -38,7 +40,7 @@
       }
       
       img {
-        width: 18px;
+        width: 22px;
       }
     }
   }
@@ -49,12 +51,10 @@
   <td class="button-td"><button @click="onClickEdit">
     <img :src="editIcon" alt="edit" />
   </button></td>
-  <td class="button-td"><button @click="onClickDelete">
-    <img :src="deleteIcon" alt="delete" />
-  </button></td>
 
   <td class="image-td">
     <img 
+      v-if="imageField && item[imageField]"
       :src="imageField ? getImage(item[imageField]) : ''"
       alt="imagem"
       style="max-width: 100px; max-height: 80px;"
@@ -67,22 +67,20 @@
     :title="typeof value === 'string' ? value : key"
   >
     <div>
-      {{ Array.isArray(value) ? value.map(item => (item as FormFieldOptionModel).name).join(', ') : value }}
+      {{ getValue(value) }}
     </div>
   </td>
 </template>
 
 <script lang="ts" setup>
   import { computed } from 'vue';
-  const editIcon = new URL('@/assets/icons/icon_close.svg', import.meta.url).href;
-  const deleteIcon = new URL('@/assets/icons/icon_close.svg', import.meta.url).href;
+  const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
   import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
   import { FormFieldOptionModel } from '@/models/formFieldModel';
 
   interface Props<T = ApiResponseData> {
     item: T;
     onClickEdit: () => void;
-    onClickDelete: () => void;
   }
 
   const props = defineProps<Props>();
@@ -97,9 +95,19 @@
     return Object.keys(props.item).find((key) => isImageUrl(props.item[key]) || key === "picture");
   });
 
+  function getValue(value: any): string {
+  if (Array.isArray(value)) {
+    return value.map((item: FormFieldOptionModel) => item.name).join(', ');
+  } 
+  else if (value && typeof value === 'object') {
+    return value.name ?? '';
+  }
+  return String(value ?? '');
+}
+
   const restFields = computed(() => {
     return Object.entries(props.item)
-      .filter(([key]) => key !== 'id' && key !== imageField.value)
+      .filter(([key]) => !key.toLowerCase().includes('id') && key !== imageField.value)
       .reduce((acc, [key, value]) => {
         acc[key] = value;
         return acc;

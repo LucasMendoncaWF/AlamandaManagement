@@ -23,6 +23,11 @@ export interface ListResponse<T extends ApiResponseData>{
   currentPage: number;
 }
 
+export interface QueryParams {
+  page: number;
+  queryString: string;
+}
+
 async function refreshAccessToken() {
   const refreshToken = localStorage.getItem('refreshToken');
   const response = await fetch(`${API_URL}/auth/refresh`, {

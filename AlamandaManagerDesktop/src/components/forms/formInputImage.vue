@@ -47,7 +47,7 @@
 <template>
   <div class="form-upload-input">
     <button @click.prevent="onClickUpload" role="button">
-      {{fileName || 'Upload de arquivo'}}
+      {{fileName || 'Upload image'}}
       <img :src="uploadIcon" alt="upload" />
     </button>
     <input
@@ -71,8 +71,8 @@
   
   const fileInput = ref<HTMLInputElement | null>(null);
   const fileName = ref('');
-  const props = defineProps<Props>();
   const attrs = useAttrs();
+  defineProps<Props>();
 
   const emit = defineEmits<{
     (e: 'update:modelValue', value: File | null): void

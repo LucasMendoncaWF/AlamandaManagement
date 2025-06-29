@@ -63,13 +63,13 @@
   <div class="background-container">
   </div>
   <div class="login-page">
-    <ErrorMessage :onClose="onCloseErrorMessage" message="Verifique os dados inseridos e tente novamente" v-if="hasError" />
+    <ErrorMessage :onClose="onCloseErrorMessage" message="Verify your credential and try again" v-if="hasError" />
     <form @submit.prevent="onSubmit">
       <div class="form-content">
         <img class="logo-image" :src="logo" alt="logo" />
         <FormInput id="email" required label="E-mail" type="email" v-model="loginData.email"/>
         <FormInput id="pass" required label="Password" type="password" v-model="loginData.password"/>
-        <FormSubmit :disabled="!loginData.email || !loginData.password || isLoading" value="Entrar" />
+        <FormSubmit :disabled="!loginData.email || !loginData.password || isLoading" value="Sign In" />
       </div>
     </form>
   </div>
