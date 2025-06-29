@@ -1,17 +1,18 @@
 <style lang="scss" scoped>
   @use '@/assets/variables.scss' as *;
   .list {
+    padding-bottom: 50px;
     .list-scroll {
-      max-height: calc(100vh - 400px);
-      overflow: auto;
-      position: relative;
+      width: 100%;
       margin-bottom: 15px;
+      overflow-x: auto;
     }
   
     .list-table {
       width: 100%;
       border-collapse: collapse;
       border: none;
+      min-width: 100px;
     }
 
     .list-body {
@@ -104,7 +105,7 @@
     emptyMessage: string;
     errorMessage: string;
     searchFunction: (queryString: string) => ListResponse<T>;
-    addItemFunction: (data: T) => void;
+    addItemFunction: (data: Object) => void;
     getFieldFunction: () => FormFieldModel[];
   }
 
@@ -122,11 +123,13 @@
 
   }
 
-  const onClickEdit = (id: number) => {
+  const onClickEdit = (id?: number) => {
+    if(!id) { return }
     editId.value = id;
   }
 
-  const onClickDelete = (id: number) => {
+  const onClickDelete = (id?: number) => {
+    if(!id) { return }
     deleteId.value = id;
   }
 

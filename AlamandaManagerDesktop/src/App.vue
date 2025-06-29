@@ -1,7 +1,9 @@
 <style lang="scss">
  @use "@/assets/global.scss" as *;
  .structure-body {
-   width: calc(100% - 108px);
+  width: calc(100% - 108px);
+  max-height: 100vh;
+  overflow-y: auto;
  }
 </style>
 

@@ -29,7 +29,7 @@ namespace AlamandaApi.Services.Team {
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update([FromBody] TeamMemberModel member) {
+    public async Task<IActionResult> Update([FromBody] TeamMemberEditModel member) {
       try {
         var existingUser = await _teamService.GetById(member.Id);
         await _teamService.Update(member);
@@ -55,9 +55,14 @@ namespace AlamandaApi.Services.Team {
     
     [HttpGet("fields")]
     [AllowAnonymous]
-    public async Task<List<FieldInfo>> getFields() {
-      var result = await _fieldSchemaService.GetFieldTypes("teammembers");
-      return result;
+    public async Task<IActionResult> getFields() {
+      try {
+        var result = await _fieldSchemaService.GetFieldTypes("teammembers");
+        return Ok(result);
+      }
+      catch {
+        return BadRequest("An error happend when trying to fetch fields");
+      }
     }  
   }
 }

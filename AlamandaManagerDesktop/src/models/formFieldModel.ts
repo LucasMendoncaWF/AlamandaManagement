@@ -1,8 +1,9 @@
 export interface FormFieldModel {
-  fieldName: string,
-  dataType: FieldDataTypeEnum,
-  fieldMaxSize: string,
-  optionsArray: FormFieldOptionModel[]
+  fieldName: string;
+  dataType: FieldDataTypeEnum;
+  fieldMaxSize: string;
+  optionsArray: FormFieldOptionModel[];
+  isRequired: boolean;
 }
 
 export interface FormFieldOptionModel {

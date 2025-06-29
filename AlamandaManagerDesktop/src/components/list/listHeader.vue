@@ -18,8 +18,8 @@
 
 <template>
   <thead>
-    <th>id</th>
-
+    <th></th>
+    <th></th>
     <th v-if="imageField" class="image-td">
       {{ imageField }}
     </th>
@@ -30,9 +30,6 @@
     >
       {{ key }}
     </th>
-
-    <th></th>
-    <th></th>
   </thead>
 </template>
 

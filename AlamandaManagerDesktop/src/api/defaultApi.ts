@@ -1,10 +1,12 @@
+import { FormFieldOptionModel } from "@/models/formFieldModel";
+
 const API_URL = import.meta.env.VITE_API_URL;
 type Method = 'POST' | 'GET' | 'PUT' | 'DELETE';
 
-export type ResponseKeyType = string | number | Date;
+export type ResponseKeyType = string | number | Date | string[] | FormFieldOptionModel[] | null | undefined;
 export type ResponseObjectKeysTypes = Record<string, ResponseKeyType>;
 export interface ApiResponseData extends ResponseObjectKeysTypes {
-  id: number;
+  id?: number;
 }
 
 interface RestRequest<P = Record<string, any>> {

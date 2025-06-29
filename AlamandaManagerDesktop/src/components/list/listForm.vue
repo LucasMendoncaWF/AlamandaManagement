@@ -31,7 +31,7 @@
           variant="inverted"
           :accept="field.dataType === FieldDataTypeEnum.Image || field.dataType === FieldDataTypeEnum.ImageArray ? 'image/*' : undefined"
           :multiple="field.dataType === FieldDataTypeEnum.ImageArray || field.dataType === FieldDataTypeEnum.OptionsArray"
-          :required="false"
+          :required=field.isRequired
         />
       </div>
       <div class="team-input" v-if="isMultipleSelectField(field)">
@@ -43,7 +43,7 @@
           @update:modelValue="form[field.fieldName] = $event"
           :options="field.optionsArray"
           variant="inverted"
-          :required="false"
+          :required=field.isRequired
         />
       </div>
     </template>
@@ -67,15 +67,15 @@ import ErrorMessage from '@/components/errorMessage.vue'
 import Loader from '@/components/loader.vue'
 import FormButton from '@/components/forms/formButton.vue'
 import { fileToBase64 } from '@/utis/converter'
-import { getErrorMessage } from '@/api/defaultApi'
+import { ApiResponseData, getErrorMessage } from '@/api/defaultApi'
 import { FormFieldModel, FieldDataTypeEnum } from '@/models/formFieldModel'
 import FormMultipleSelect from '../forms/formMultipleSelect.vue'
 
-interface Props<T = any> {
+interface Props<T = ApiResponseData> {
   data?: T;
   onComplete: () => void;
   onCancel: () => void;
-  addItem: (data: any) => void;
+  addItem: (data: T) => void;
   fields?: FormFieldModel[];
 }
 const props = defineProps<Props>()
@@ -136,7 +136,7 @@ const onSubmit = async () => {
 
   isLoading.value = true
   try {
-    const sendData: Record<string, any> = {}
+    const sendData: ApiResponseData = {}
 
     for (const f of props.fields) {
       if (f.dataType === FieldDataTypeEnum.Image) {
