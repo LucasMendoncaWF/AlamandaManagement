@@ -73,7 +73,7 @@
       </div>
     </form>
   </div>
-  <Loader v-if="isLoading" />
+  <Loader isGlobal v-if="isLoading" />
 </template>
 
 <script lang="ts" setup>

@@ -5,17 +5,29 @@
   $transit-color: rgba($primary, 0.8);
   $page-color: $white;
   .loader-container{  
-    background-color: rgba($secondary, 0.8);
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-    animation: fadeIn 1s;
+    &--global {
+      background-color: rgba($secondary, 0.8);
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      animation: fadeIn 1s;
+    }
+
+    &--box {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      animation: fadeIn 1s;
+    }
 
     .loader {
       margin: 5% auto 30px;
@@ -131,7 +143,7 @@
 </style>
 
 <template>
-  <div class="loader-container">
+  <div :class="`loader-container loader-container${isGlobal ? '--global' : '--box'}`">
     <div class="loader book">
       <figure class="page"></figure>
       <figure class="page"></figure>
@@ -140,3 +152,11 @@
     </div>
   </div>
 </template>
+
+<script lang="ts" setup>
+  interface Props {
+    isGlobal?: boolean;
+  }
+
+  const props = defineProps<Props>();
+</script>

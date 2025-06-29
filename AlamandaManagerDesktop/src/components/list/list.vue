@@ -2,7 +2,7 @@
   @use '@/assets/variables.scss' as *;
   .list {
     .list-scroll {
-      max-height: calc(100vh - 290px);
+      max-height: calc(100vh - 400px);
       overflow: auto;
       position: relative;
       margin-bottom: 15px;
@@ -36,9 +36,11 @@
 
 <template>
   <div class="list">
-    <ListSearch :filters="filters" :onSearch="onSearch" :onFilter="onFilterChange" :title="title" />
-    <component 
-      :is="formComponent" 
+    <ListSearch :onSearch="onSearch" :onFilter="onFilterChange" :title="title" />
+    <ListForm 
+      :onCancel="onCancelEdit" 
+      :addItem="addItemFunction" 
+      :fields="fields" 
       :onComplete="refetch"
     />
     <div class="list-scroll">
@@ -58,10 +60,12 @@
               :onClickDelete="() => onClickDelete(item.id)"
             />
             <td colspan="10" v-if="editId === item.id">
-              <component
-                :data="data"
-                :is="formComponent" 
-                :onComplete="onCancelEdit"
+              <ListForm 
+                :onCancel="onCancelEdit" 
+                :addItem="addItemFunction" 
+                :fields="fields" 
+                :data="item" 
+                :onComplete="refetch"
               />
             </td>
           </tr>
@@ -76,7 +80,7 @@
         {{ errorMessage }}
       </div>
     </div>
-    <Loader v-if="isPending" />
+    <Loader v-if="isPending"/>
 
     <ListPagination :onChangePage="onChangePage" :totalPages="data?.totalPages" :currentPage="currentPage" />
   </div>
@@ -85,35 +89,30 @@
 <script lang="ts" setup>
   import ListPagination from './listPagination.vue';
   import ListSearch from './listSearch.vue';
-  import { ref, VueElement } from 'vue';
+  import { ref } from 'vue';
   import queryKeys from '@/api/queryKeys';
   import { useQuery } from '@tanstack/vue-query';
   import { ListResponse, ApiResponseData } from '@/api/defaultApi';
   import ListItem from './listItem.vue';
   import Loader from '../loader.vue';
   import ListHeader from './listHeader.vue';
+  import ListForm from './listForm.vue';
+  import { FormFieldModel } from '@/models/formFieldModel';
 
   interface Props<T extends ApiResponseData = ApiResponseData> {
     title: string;
     emptyMessage: string;
     errorMessage: string;
-    formComponent: VueElement;
-    filters?: VueElement;
-    searchFunction: (filters?: T) => ListResponse<T>;
+    searchFunction: (queryString: string) => ListResponse<T>;
+    addItemFunction: (data: T) => void;
+    getFieldFunction: () => FormFieldModel[];
   }
 
   const props = defineProps<Props>();
-  const { isPending, isError, data, refetch } = useQuery({
-    queryKey: [queryKeys.TeamMembersList],
-    async queryFn() {
-      return await props.searchFunction(currentFilters.value);
-    }
-  });
-
   const currentPage = ref(1);
+  const queryString = ref('');
   const editId = ref<number | null>(null);
   const deleteId = ref<number | null>(null);
-  const currentFilters = ref();
 
   const onFilterChange = () => {
 
@@ -138,4 +137,18 @@
   const onChangePage = (page: number) => {
     currentPage.value = page;
   }
+
+    const { isPending, isError, data, refetch } = useQuery({
+    queryKey: [queryKeys.List, {title: props.title, queryString: queryString.value}],
+    async queryFn() {
+      return await props.searchFunction(queryString.value);
+    }
+  });
+
+    const { isPending: isFieldsPending, isError: isFieldsError, data: fields } = useQuery({
+    queryKey: [queryKeys.Fields, {title: props.title}],
+    async queryFn() {
+      return await props.getFieldFunction();
+    }
+  });
 </script>

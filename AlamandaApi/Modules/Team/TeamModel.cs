@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using AlamandaApi.Services.Comics;
 
 namespace AlamandaApi.Services.Team {
-  public class TeamMemberCreationModel {
+
+  public class TeamMemberBaseModel {
     [Required(ErrorMessage = "Name é obrigatório")]
     [MaxLength(100, ErrorMessage = "Name pode ter no máximo 100 caracteres")]
     public string Name { get; set; } = null!;
@@ -12,11 +14,23 @@ namespace AlamandaApi.Services.Team {
 
     public string? Picture { get; set; } = "user";
   }
-
-  public class TeamMemberModel : TeamMemberCreationModel {
+  public class TeamMemberCreationModel : TeamMemberBaseModel {
+    public virtual List<string> ComicsIds { get; set; } = new List<string>();
+  }
+  
+  public class TeamMemberEditModel : TeamMemberBaseModel {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
+    public virtual List<string> ComicsIds { get; set; } = new List<string>();
+  }
+
+
+  public class TeamMemberModel : TeamMemberBaseModel {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+    public virtual ICollection<ComicModel> Comics { get; set; } = new List<ComicModel>();
   }
 
   public class PagedResult<T> {

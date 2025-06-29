@@ -1,3 +1,4 @@
+import { FormFieldModel } from "@/models/formFieldModel";
 import { ListResponse, ApiResponseData, restApi } from "./defaultApi";
 
 export interface TeamMemberForm {
@@ -31,4 +32,8 @@ export async function addMember(body: TeamMemberFormSubmit) {
 
 export async function getMembers(filters: TeamMemberFilters) {
   return await restApi<ListResponse<TeamMemberResponse>>({url: 'team', method: 'GET', params: filters});
+}
+
+export async function getMembersFields() {
+  return await restApi<FormFieldModel>({url: 'team/fields', method: 'GET'});
 }

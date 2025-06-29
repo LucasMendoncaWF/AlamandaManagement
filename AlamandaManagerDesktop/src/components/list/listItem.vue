@@ -15,9 +15,9 @@
 <template>
   <td>{{ item.id }}</td>
 
-  <td v-if="imageField" class="image-td">
+  <td class="image-td">
     <img 
-      :src="getImage(item[imageField])"
+      :src="imageField ? getImage(item[imageField]) : ''"
       alt="imagem"
       style="max-width: 100px; max-height: 80px;"
     />
@@ -27,7 +27,7 @@
     v-for="(value, key) in restFields"
     :key="key"
   >
-    {{ value }}
+    {{ Array.isArray(value) ? value.map(item => item.name).join(', ') : value }}
   </td>
 
   <td class="button-td"><button @click="onClickEdit">Edit</button></td>
@@ -53,7 +53,7 @@
     typeof value === 'string' ? value : '';
 
   const imageField = computed(() => {
-    return Object.keys(props.item).find((key) => isImageUrl(props.item[key]));
+    return Object.keys(props.item).find((key) => isImageUrl(props.item[key]) || key === "picture");
   });
 
   const restFields = computed(() => {

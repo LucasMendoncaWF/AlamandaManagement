@@ -1,42 +1,53 @@
 using AlamandaApi.Data;
+using AlamandaApi.Services.Comics;
 using Microsoft.EntityFrameworkCore;
 
 namespace AlamandaApi.Services.Team {
   public class TeamService {
-      private readonly AppDbContext _context;
+    private readonly AppDbContext _context;
 
-      public TeamService(AppDbContext context) {
-        _context = context;
+    public TeamService(AppDbContext context) {
+      _context = context;
+    }
+
+    public async Task Create(TeamMemberCreationModel member) {
+      var existingMember = await _context.TeamMembers
+        .AsNoTracking()
+        .FirstOrDefaultAsync(m => m.Social == member.Social);
+      if (existingMember != null) {
+        throw new Exception("Usuário com esta rede social já cadastrado.");
       }
 
-      public async Task Create(TeamMemberCreationModel member) {
-        var existingMember = await _context.TeamMembers
-          .AsNoTracking()
-          .FirstOrDefaultAsync(m => m.Social == member.Social);
-        if (existingMember != null) {
-          throw new Exception("Usuário com esta rede social já cadastrado.");
-        }
+      var newMember = ObjectMapperUtil.CopyWithCapitalization<TeamMemberCreationModel, TeamMemberModel>(member);
+      newMember.Picture = "";
 
-        var newMember = ObjectMapperUtil.CopyWithCapitalization<TeamMemberCreationModel, TeamMemberModel>(member);
-        newMember.Picture = "";
-        await _context.TeamMembers.AddAsync(newMember);
+      if (member.ComicsIds != null && member.ComicsIds.Any()) {
+        var relatedComics = await _context.Comics
+            .Where(c => member.ComicsIds.Contains(c.Id.ToString()))
+            .ToListAsync();
+
+        newMember.Comics = relatedComics;
+      }
+
+      await _context.TeamMembers.AddAsync(newMember);
+      await _context.SaveChangesAsync();
+
+      if (!string.IsNullOrEmpty(member.Picture) && FieldValidator.IsBase64String(member.Picture)) {
+        var savedImagePath = await ImageHandler.SaveImage(member.Picture,
+          new ImageHandler.ImageSaveOptions {
+            Name = newMember.Id.ToString(),
+            Folder = "team",
+            Quality = 50,
+            MaxWidth = 300,
+          }
+        );
+
+
+        newMember.Picture = savedImagePath;
+        _context.TeamMembers.Update(newMember);
         await _context.SaveChangesAsync();
-
-        if (!string.IsNullOrEmpty(member.Picture) && FieldValidator.IsBase64String(member.Picture)) {
-          var savedImagePath = await ImageHandler.SaveImage(member.Picture,
-            new ImageHandler.ImageSaveOptions {
-              Name = newMember.Id.ToString(),
-              Folder = "team",
-              Quality = 50,
-              MaxWidth = 300,
-            }
-          );
-          newMember.Picture = savedImagePath;
-
-          _context.TeamMembers.Update(newMember);
-          await _context.SaveChangesAsync();
-        }
       }
+    }
 
     public async Task Update(TeamMemberModel member) {
       var existingMember = await _context.TeamMembers
@@ -67,22 +78,36 @@ namespace AlamandaApi.Services.Team {
     
 
     public async Task<PagedResult<TeamMemberModel>> GetAll(int page = 1, int pageSize = 10, string queryString = "") {
-      var query = _context.TeamMembers.AsNoTracking();
+      var query = _context.TeamMembers
+        .Include(t => t.Comics)
+        .AsNoTracking();
+
       if (!string.IsNullOrWhiteSpace(queryString)) {
         queryString = queryString.Trim().ToLower();
         query = query.Where(m =>
           m.Name.ToLower().Contains(queryString) ||
           m.Social.ToLower().Contains(queryString));
       }
+
       var totalItems = await query.CountAsync();
       var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
 
       var items = await query
         .Skip((page - 1) * pageSize)
         .Take(pageSize)
+        .Select(t => new TeamMemberModel {
+          Id = t.Id,
+          Name = t.Name,
+          Social = t.Social,
+          Picture = t.Picture,
+          Comics = t.Comics.Select(c => new ComicModel {
+            Id = c.Id,
+            Name = c.Name
+          }).ToList()
+        })
         .ToListAsync();
 
-      return new PagedResult<TeamMemberModel>{
+      return new PagedResult<TeamMemberModel> {
         Items = items,
         TotalPages = totalPages,
         CurrentPage = page

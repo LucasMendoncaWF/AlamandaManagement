@@ -5,6 +5,8 @@ using AlamandaApi.Services.Team;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using AlamandaApi.Services.FieldsSchema;
+using System.Text.Json.Serialization;
 
 DotNetEnv.Env.Load();
 
@@ -22,6 +24,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TeamService>();
+builder.Services.AddScoped<FieldsSchemaService>();
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";
 builder.Services.AddAuthentication(options => {
@@ -46,6 +49,13 @@ builder.Services.AddAuthorization(options => {
 
 var allowedHostsEnv = Environment.GetEnvironmentVariable("ALLOWED_HOSTS") ?? "";
 var allowedHosts = allowedHostsEnv.Split(',', StringSplitOptions.RemoveEmptyEntries);
+
+builder.Services.AddControllers()
+  .AddJsonOptions(options =>
+  {
+      options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+      options.JsonSerializerOptions.WriteIndented = true;
+  });
 
 builder.Services.AddCors(options => {
   options.AddPolicy("DefaultCorsPolicy", policy => {

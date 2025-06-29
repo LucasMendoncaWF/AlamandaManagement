@@ -1,3 +1,4 @@
 export default {
-  TeamMembersList: 'TeamMembersList'
+  List: 'List',
+  Fields: 'Fields'
 }

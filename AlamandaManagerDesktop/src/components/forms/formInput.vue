@@ -44,7 +44,7 @@
   import { useAttrs } from 'vue';
 
   interface Props {
-    modelValue: string;
+    modelValue?: string;
     label: string;
     id: string;
     variant?: 'inverted'
