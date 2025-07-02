@@ -9,7 +9,7 @@ export interface ApiResponseData extends ResponseObjectKeysTypes {
   id?: number;
 }
 
-interface RestRequest<P = Record<string, any>> {
+interface RestRequest<P = Record<string, unknown>> {
   url: string;
   method?: Method;
   body?: object;
@@ -126,8 +126,12 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
   return data as T;
 }
 
+interface ErrorMessage {
+  message: string;
+}
+
 export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error;
-  if (error && typeof (error as any).message === 'string') return (error as any).message;
-  return 'Erro desconhecido';
+  if (error && typeof (error as ErrorMessage).message === 'string') return (error as ErrorMessage).message;
+  return 'Unknown error';
 }

@@ -1,6 +1,7 @@
 using AlamandaApi.Data;
 using AlamandaApi.Services.Comics;
 using Microsoft.EntityFrameworkCore;
+using static AlamandaApi.Data.AppDbContext;
 
 namespace AlamandaApi.Services.Team {
   public class TeamService {
@@ -10,10 +11,9 @@ namespace AlamandaApi.Services.Team {
       _context = context;
     }
 
-    public async Task Create(TeamMemberCreationModel member) {
+    public async Task<TeamMemberModel> Create(TeamMemberCreationModel member) {
       var newMember = ObjectMapperUtil.CopyWithCapitalization<TeamMemberCreationModel, TeamMemberModel>(member);
       newMember.Picture = "";
-
       if (member.ComicsIds?.Any() == true) {
         var relatedComics = await _context.Comics
           .Where(c => member.ComicsIds.Contains(c.Id.ToString()))
@@ -21,7 +21,7 @@ namespace AlamandaApi.Services.Team {
         newMember.Comics = relatedComics;
       }
 
-      await _context.TeamMembers.AddAsync(newMember);
+      var newMemberSaved = await _context.TeamMembers.AddAsync(newMember);
       await _context.SaveChangesAsync();
 
       if (!string.IsNullOrEmpty(member.Picture) && FieldValidator.IsBase64String(member.Picture)) {
@@ -32,12 +32,15 @@ namespace AlamandaApi.Services.Team {
           MaxWidth = 300,
         });
         newMember.Picture = savedImage;
-        _context.TeamMembers.Update(newMember);
+        var result = _context.TeamMembers.Update(newMember);
         await _context.SaveChangesAsync();
+        return result.Entity;
       }
+      
+      return newMemberSaved.Entity;
     }
 
-    public async Task Update(TeamMemberEditModel member) {
+    public async Task<TeamMemberModel> Update(TeamMemberEditModel member) {
       var existing = await _context.TeamMembers
         .Include(m => m.Comics)
         .FirstOrDefaultAsync(m => m.Id == member.Id);
@@ -60,12 +63,13 @@ namespace AlamandaApi.Services.Team {
 
       existing.Name = member.Name;
       existing.Social = member.Social;
-
-      _context.TeamMembers.Update(existing);
+      existing.RoleId = member.RoleId;
+      var result = _context.TeamMembers.Update(existing);
       await _context.SaveChangesAsync();
+      return result.Entity;
     }
 
-    public async Task<PagedResult<TeamMemberModel>> GetAll(int page = 1, int pageSize = 10, string query = "") {
+    public async Task<PagedResult<TeamMemberModel>> GetAll(int page, int pageSize, string query) {
       var teamQuery = _context.TeamMembers
         .Include(t => t.Comics)
         .Include(t => t.Role)

@@ -26,6 +26,10 @@
       opacity: 0.6;
     }
 
+    &--danger {
+      background-color: $primary;
+    }
+
     &--inverted {
       background-color: $white;
       outline: 2px solid $secondary;
@@ -47,14 +51,15 @@
 </style>
 
 <template>
-  <button type="button" :class="`form-button form-button--${inverted ? 'inverted' : ''}`" v-bind="attrs" @click="onClick"><slot/></button>
+  <button type="button" :disabled="disabled" :class="`form-button form-button--${variant}`" v-bind="attrs" @click="onClick"><slot/></button>
 </template>
 
 <script lang="ts" setup>
   import { useAttrs } from 'vue';
   interface Props {
     onClick?: () => void;
-    inverted: boolean;
+    variant?: 'inverted' | 'danger';
+    disabled?: boolean;
   }
 
   defineProps<Props>();

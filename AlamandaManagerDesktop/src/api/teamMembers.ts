@@ -21,14 +21,14 @@ export interface TeamMemberResponse extends ApiResponseData {
 }
 
 export async function addMember(body: TeamMemberFormSubmit) {
-  return await restApi<TeamMemberForm>({url: 'team', method: 'POST', body});
+  return await restApi<TeamMemberResponse>({url: 'team', method: 'POST', body});
 }
 
 export async function updateMember(body: TeamMemberFormSubmit) {
-  return await restApi<TeamMemberForm>({url: 'team', method: 'PUT', body});
+  return await restApi<TeamMemberResponse>({url: 'team', method: 'PUT', body});
 }
 
-export async function getMembers(params: QueryParams) {
+export async function getMembers(params: Record<string, unknown>) {
   return await restApi<ListResponse<TeamMemberResponse>>({url: 'team', method: 'GET', params});
 }
 

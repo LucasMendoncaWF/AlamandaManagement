@@ -7,6 +7,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using AlamandaApi.Services.FieldsSchema;
 using System.Text.Json.Serialization;
+using AlamandaApi.Services.Art;
 
 DotNetEnv.Env.Load();
 
@@ -24,6 +25,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<TeamService>();
+builder.Services.AddScoped<ArtService>();
 builder.Services.AddScoped<FieldsSchemaService>();
 
 var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";

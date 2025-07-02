@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using AlamandaApi.Services.User;
 using AlamandaApi.Services.Team;
 using AlamandaApi.Services.Comics;
+using AlamandaApi.Services.Art;
 
 namespace AlamandaApi.Data {
   public class AppDbContext : DbContext {
@@ -12,6 +13,13 @@ namespace AlamandaApi.Data {
     public DbSet<RefreshTokenModel> RefreshTokens { get; set; }
     public DbSet<ComicModel> Comics { get; set; }
     public DbSet<RoleModel> Roles { get; set; }
+    public DbSet<ArtModel> FanArts { get; set; }
+
+    public class PagedResult<T> {
+      public List<T> Items { get; set; } = [];
+      public int TotalPages { get; set; }
+      public int CurrentPage { get; set; }
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       base.OnModelCreating(modelBuilder);

@@ -2,24 +2,24 @@ using AlamandaApi.Services.FieldsSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AlamandaApi.Services.Team {
+namespace AlamandaApi.Services.Art {
   [ApiController]
   [Route("[controller]")]
-  public class TeamController : ControllerBase {
-    private readonly TeamService _teamService;
+  public class ArtController : ControllerBase {
+    private readonly ArtService _artService;
     private readonly FieldsSchemaService _fieldSchemaService;
 
-    public TeamController(TeamService teamService, FieldsSchemaService fieldSchemaService) {
-      _teamService = teamService;
+    public ArtController(ArtService artService, FieldsSchemaService fieldSchemaService) {
+      _artService = artService;
       _fieldSchemaService = fieldSchemaService;
     }
 
     [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] TeamMemberCreationModel member) {
+    public async Task<IActionResult> Create([FromBody] ArtCreationModel art) {
       try {
-        var response = await _teamService.Create(member);
-        return Ok(new { response });
+        var result = await _artService.Create(art);
+        return Ok(new { result });
       }
       catch (Exception ex) {
         return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
@@ -28,10 +28,10 @@ namespace AlamandaApi.Services.Team {
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update([FromBody] TeamMemberEditModel member) {
+    public async Task<IActionResult> Update([FromBody] ArtModel art) {
       try {
-        var existingUser = await _teamService.GetById(member.Id);
-        var result = await _teamService.Update(member);
+        var existingUser = await _artService.GetById(art.Id);
+        var result = await _artService.Update(art);
         return Ok(new { result });
       }
       catch (Exception ex) {
@@ -44,7 +44,7 @@ namespace AlamandaApi.Services.Team {
     [AllowAnonymous]
     public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, string queryString = "") {
       try {
-        var result = await _teamService.GetAll(page, pageSize, queryString);
+        var result = await _artService.GetAll(page, pageSize, queryString);
         return Ok(result);
       }
       catch (Exception ex) {
@@ -56,7 +56,7 @@ namespace AlamandaApi.Services.Team {
     [AllowAnonymous]
     public async Task<IActionResult> getFields() {
       try {
-        var result = await _fieldSchemaService.GetFieldTypes("teammembers");
+        var result = await _fieldSchemaService.GetFieldTypes("FanArts");
         return Ok(result);
       }
       catch {

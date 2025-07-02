@@ -41,10 +41,4 @@ namespace AlamandaApi.Services.Team {
     public int Id { get; set; }
     public virtual ICollection<ComicModel> Comics { get; set; } = new List<ComicModel>();
   }
-
-  public class PagedResult<T> {
-    public List<T> Items { get; set; } = [];
-    public int TotalPages { get; set; }
-    public int CurrentPage { get; set; }
-  }
 }

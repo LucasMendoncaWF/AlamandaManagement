@@ -29,13 +29,18 @@
         border: none;
         margin-left: 5px;
         cursor: pointer;
+        border-radius: 40px;
+        width: 30px;
+        padding: 0;
+        margin-right: 10px;
 
         &:hover {
           transform: scale(1.05);
+          outline: 4px solid rgba($secondary, 0.2);
         }
 
         img {
-          width: 30px;
+          width: 100%;
           display: flex;
           align-items: center;
         }
@@ -76,6 +81,6 @@
 
     debounceTimer = setTimeout(() => {
       props.onSearch(newVal);
-    }, 1000);
+    }, 500);
   });
 </script>

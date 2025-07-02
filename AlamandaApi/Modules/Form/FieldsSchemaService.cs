@@ -34,7 +34,7 @@ namespace AlamandaApi.Services.FieldsSchema {
       _context = context;
     }
 
-    public async Task<List<FieldInfo>> GetFieldTypes(string tableName) {
+    public async Task<List<FieldInfo>> GetFieldTypes(string tableName, List<string>? excludedFields = null) {
       var fields = new List<FieldInfo>();
       var foreignKeys = new Dictionary<string, string>();
       var foundJunctions = new Dictionary<string, string>();
@@ -98,8 +98,9 @@ namespace AlamandaApi.Services.FieldsSchema {
           var isJunction = fkTable != null && junctionTables.Contains(fkTable.ToLower());
 
           var inferredType = InferType(name.ToLower(), sqlType, columnType, isForeignKey, isJunction);
-
-          if (name.ToLower() != "id") {
+          
+          var lowerName = name.ToLower();
+          if (name.ToLower() != "id" && (excludedFields == null || !excludedFields.Contains(lowerName))) {
             fields.Add(new FieldInfo {
               FieldName = name.ToLower(),
               DataType = inferredType,

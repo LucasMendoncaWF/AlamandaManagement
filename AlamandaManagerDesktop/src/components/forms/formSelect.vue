@@ -1,18 +1,19 @@
 <style lang="scss" scoped>
   @use '@/assets/variables.scss' as *;
-  .form-input {
+  .form-select {
     color: $white;
-    margin: 10px 0;
+    margin-top: 10px;
     text-transform: capitalize;
+    width: 100%;
 
-    input {
+    select {
       background-color: $white;
       padding: 10px;
       margin-top: 5px;
       font-size: 16px;
-      width: calc(100% - 20px);
       border: 0;
       border-radius: 5px;
+      width: 100%;
 
       &:focus {
         outline: 2px solid $secondary;
@@ -22,7 +23,7 @@
     &--inverted {
       color: $secondary;
 
-      input {
+      select {
         border: 2px solid $secondary;
       }
     }
@@ -30,13 +31,14 @@
 </style>
 
 <template>
-  <div :class="`form-input form-input--${variant}`">
+  <div :class="`form-select form-select--${variant}`">
     <label :for="id">{{ label.replace('id', '') }}</label>
     <select
       :id="id"
       v-bind="attrs"
       @input="onInput"
       :value="modelValue"
+      :disabled="disabled"
     >
       <option v-for="option of options" :value="option.id">
         {{ option.name }}
@@ -55,6 +57,7 @@ import { useAttrs } from 'vue';
     id: string;
     variant?: 'inverted';
     options: FormFieldOptionModel[];
+    disabled?: boolean;
   }
  
   defineProps<Props>();

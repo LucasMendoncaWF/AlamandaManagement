@@ -30,10 +30,15 @@
 </style>
 
 <template>
-  <input type="submit" class="form-submit" v-bind="attrs"/>
+  <input type="submit" :disabled="disabled" :value="value" class="form-submit" v-bind="attrs"/>
 </template>
 
 <script lang="ts" setup>
+  interface Props {
+    disabled?: boolean;
+    value: string;
+  }
+  defineProps<Props>();
   import { useAttrs } from 'vue';
   const attrs = useAttrs();
 </script>

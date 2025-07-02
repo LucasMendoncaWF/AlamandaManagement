@@ -2,8 +2,8 @@
   <List
     title="Team"
     emptyMessage="No members were found with this search"
-    errorMessage="An Error Occurred while searching for members"
-    :maxImageSize="200"
+    errorMessage="An error occurred while searching for members"
+    :maxImageSize="2000"
     :searchFunction="getMembers"
     :getFieldFunction="getMembersFields"
     :addItemFunction="addMember"

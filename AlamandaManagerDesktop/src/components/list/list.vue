@@ -29,8 +29,13 @@
 
     .state-ui {
       text-align: center;
-      padding: 20px 0;
-      background-color: $lightGray;
+      padding: 50px 0;
+    }
+
+    .empty-area {
+      img {
+        margin-top: 30px;
+      }
     }
   }
 </style>
@@ -39,10 +44,14 @@
   <div class="list">
     <ListSearch :onClickCreate="onOpenForm" :onSearch="onSearch" :title="title" />
     <ListForm 
+      v-if="isFormOpen"
       :onCancel="onCancelEdit"
-      :addItem="addItemFunction" 
+      :onDelete="onClickDelete"
+      :addItem="addItemFunction"
       :updateItem="updateItemFunction"
       :onComplete="onCompleteUpdating"
+      :isFieldsError="isFieldsError"
+      :isFieldsPending="isFieldsPending"
       :isFormOpen="isFormOpen"
       :fields="fields" 
       :maxImageSize="maxImageSize"
@@ -67,23 +76,24 @@
       </table>
     </div>
     <div v-if="isError || (data && !data.items.length)" class="state-ui">
-      <div v-if="data && !data.items.length">
-        {{ emptyMessage }}
+      <div class="empty-area" v-if="data && !data.items.length">
+        <div>{{ emptyMessage }}</div>
+        <img :src="emptyImg" alt="empty result" />
       </div>
       <div v-if="isError">
         {{ errorMessage }}
       </div>
     </div>
-    <Loader v-if="isPending"/>
-
+    <Loader v-if="isPending" isGlobal/>
     <ListPagination :onChangePage="onChangePage" :totalPages="data?.totalPages" :currentPage="currentPage" />
   </div>
 </template>
 
 <script lang="ts" setup>
+  const emptyImg = new URL('@/assets/images/empty.webp', import.meta.url).href;
   import ListPagination from './listPagination.vue';
   import ListSearch from './listSearch.vue';
-  import { ref } from 'vue';
+  import { computed, ref } from 'vue';
   import queryKeys from '@/api/queryKeys';
   import { useQuery } from '@tanstack/vue-query';
   import { ListResponse, ApiResponseData, QueryParams } from '@/api/defaultApi';
@@ -113,7 +123,6 @@
 
   const onSearch = (value: string) => {
     queryString.value = value;
-    refetch();
   }
 
   const onClickEdit = (id?: number) => {
@@ -145,17 +154,24 @@
     onCancelEdit();
   }
 
-    const { isPending, isError, data, refetch } = useQuery({
-    queryKey: [queryKeys.List, {title: props.title, queryString: queryString.value}],
+  const listQueryKey = computed(() => [
+    queryKeys.List,
+    { title: props.title, page: currentPage.value, queryString: queryString.value }
+  ]);
+
+  const { isPending, isError, data, refetch } = useQuery({
+    queryKey: [listQueryKey],
     async queryFn() {
       return await props.searchFunction({queryString: queryString.value, page: currentPage.value});
-    }
+    },
+    
   });
 
     const { isPending: isFieldsPending, isError: isFieldsError, data: fields } = useQuery({
     queryKey: [queryKeys.Fields, {title: props.title}],
     async queryFn() {
       return await props.getFieldFunction();
-    }
+    },
+    gcTime: 1000 * 60 * 10,
   });
 </script>

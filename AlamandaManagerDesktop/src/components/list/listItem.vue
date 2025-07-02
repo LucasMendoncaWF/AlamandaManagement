@@ -55,8 +55,9 @@
   <td class="image-td">
     <img 
       v-if="imageField && item[imageField]"
-      :src="imageField ? getImage(item[imageField]) : ''"
+      :src="imageField ? getImage(imageUrl) : ''"
       alt="imagem"
+      @error="onImageError"
       style="max-width: 100px; max-height: 80px;"
     />
   </td>
@@ -67,16 +68,22 @@
     :title="typeof value === 'string' ? value : key"
   >
     <div>
-      {{ getValue(value) }}
+      {{ getValue(value as (ViewObject | ViewObject[])) }}
     </div>
   </td>
 </template>
 
 <script lang="ts" setup>
-  import { computed } from 'vue';
+  import { computed, ref, watch } from 'vue';
   const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
+  const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
   import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
   import { FormFieldOptionModel } from '@/models/formFieldModel';
+
+  interface ViewObject {
+    name: string;
+    id: string;
+  }
 
   interface Props<T = ApiResponseData> {
     item: T;
@@ -84,6 +91,11 @@
   }
 
   const props = defineProps<Props>();
+  const imageUrl = ref(props.item.picture || '');
+
+  const onImageError = () => {
+    imageUrl.value = placeholder;
+  }
 
   const isImageUrl = (value: ResponseKeyType): boolean =>
     typeof value === 'string' && /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(value);
@@ -95,15 +107,15 @@
     return Object.keys(props.item).find((key) => isImageUrl(props.item[key]) || key === "picture");
   });
 
-  function getValue(value: any): string {
-  if (Array.isArray(value)) {
-    return value.map((item: FormFieldOptionModel) => item.name).join(', ');
-  } 
-  else if (value && typeof value === 'object') {
-    return value.name ?? '';
+  function getValue(value: ViewObject | ViewObject[]): string {
+    if (Array.isArray(value)) {
+      return value.map((item: FormFieldOptionModel) => item.name).join(', ');
+    } 
+    else if (value && typeof value === 'object') {
+      return value.name ?? '';
+    }
+    return String(value ?? '');
   }
-  return String(value ?? '');
-}
 
   const restFields = computed(() => {
     return Object.entries(props.item)
@@ -112,5 +124,9 @@
         acc[key] = value;
         return acc;
       }, {} as Record<string, ResponseKeyType>);
+  });
+
+  watch(() => props.item, (newData) => {
+    imageUrl.value = newData.picture as string;
   });
 </script>

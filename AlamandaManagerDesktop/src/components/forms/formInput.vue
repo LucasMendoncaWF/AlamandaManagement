@@ -2,7 +2,7 @@
   @use '@/assets/variables.scss' as *;
   .form-input {
     color: $white;
-    margin: 10px 0;
+    margin-top: 10px;
     text-transform: capitalize;
 
     input {
@@ -10,7 +10,7 @@
       padding: 10px;
       margin-top: 5px;
       font-size: 16px;
-      width: calc(100% - 20px);
+      width: calc(100% - 24px);
       border: 0;
       border-radius: 5px;
 
@@ -37,6 +37,7 @@
       v-bind="attrs"
       @input="onInput"
       :value="modelValue"
+      :disabled="disabled"
     />
   </div>
 </template>
@@ -48,10 +49,11 @@
     modelValue?: string;
     label: string;
     id: string;
-    variant?: 'inverted'
+    variant?: 'inverted';
+    disabled?: boolean;
   }
  
-  const props = defineProps<Props>();
+  defineProps<Props>();
   const attrs = useAttrs();
 
   const emit = defineEmits<{

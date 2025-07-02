@@ -19,7 +19,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.team,
     name: 'tean',
-    component: () => import('@/sections/team/teamPage.vue'),
+    component: () => import('@/sections/teamPage.vue'),
   },
   {
     path: urls.arts,
