@@ -19,6 +19,8 @@
   align-items: center;
   width: 100%;
   height: 100%;
+  top: 0;
+  left: 0;
   background-color: rgba($secondary, 0.3);
 }
 
@@ -146,7 +148,9 @@
         <FormSubmit :disabled="isLoading" :value="data?.id ? 'Save' : 'Create'" />
       </div>
 
-      <Loader v-if="isLoading" />
+      <div class="form-loader" v-if="isLoading" >
+        <Loader />
+      </div>
       <ErrorMessage variant="white" :onClose="onCloseErrorMessage" v-if="errorMessage" :message="errorMessage" />
     </form>
   </div>

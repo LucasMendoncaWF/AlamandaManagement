@@ -31,13 +31,14 @@
       background-color: $secondary;
       color: $white;
       border-radius: 12px;
-      padding: 5px 10px;
+      padding: 5px 5px 5px 10px;
       display: flex;
       align-items: center;
       gap: 4px;
       font-size: 11px;
 
       button {
+        transform: translateY(-1px);
         background: transparent;
         border: none;
         color: $white;
@@ -52,7 +53,7 @@
     background-color: $white;
     border-radius: 5px;
     margin-top: 5px;
-    max-height: 150px;
+    max-height: 200px;
     overflow-y: auto;
     border: 2px solid transparent;
     position: absolute;

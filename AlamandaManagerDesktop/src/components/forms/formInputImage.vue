@@ -95,7 +95,7 @@
   <div :class="`form-upload-input form-upload-input--${variant}`">
     <label>{{ label }}</label>
     <div class="previous-image" v-if="previewFile">
-      <img class="preview" :src="previewFile" :alt="label"/>
+      <img @error="onImageError" class="preview" :src="previewFile" :alt="label"/>
       <button type="button" @click="onClickUpload" class="edit-button"><img :src="editIcon" alt="edit button" /></button>
       <button type="button" @click="onDeleteImage" class="delete-button"><img :src="deleteIcon" alt="delete button" /></button>
     </div>
@@ -119,6 +119,7 @@
 
 <script lang="ts" setup>
   import { ref, useAttrs } from 'vue';
+  const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
   const uploadIcon = new URL('@/assets/icons/icon_upload.svg', import.meta.url).href;
   const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
   const deleteIcon = new URL('@/assets/icons/icon_delete.svg', import.meta.url).href;
@@ -150,6 +151,10 @@
     props.onRemoveImage(props.id);
     previewFile.value = null;
     fileInput.value = null;
+  }
+
+  const onImageError = () => {
+    previewFile.value = placeholder;
   }
 
   const onInput = (event: Event) => {
