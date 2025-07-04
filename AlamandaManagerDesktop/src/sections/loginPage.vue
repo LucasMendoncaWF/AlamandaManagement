@@ -17,6 +17,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      
+      .signin-button {
+        margin-top: 15px;
+      }
     }
   }
   .background-container {
@@ -65,11 +69,11 @@
   <div class="login-page">
     <ErrorMessage :onClose="onCloseErrorMessage" message="Verify your credential and try again" v-if="hasError" />
     <form @submit.prevent="onSubmit">
-      <div class="form-content">
+      <div>
         <img class="logo-image" :src="logo" alt="logo" />
         <FormInput id="email" required label="E-mail" type="email" v-model="loginData.email"/>
         <FormInput id="pass" required label="Password" type="password" v-model="loginData.password"/>
-        <FormSubmit :disabled="!loginData.email || !loginData.password || isLoading" value="Sign In" />
+        <FormSubmit class="signin-button" :disabled="!loginData.email || !loginData.password || isLoading" value="Sign In" />
       </div>
     </form>
   </div>
@@ -98,6 +102,7 @@ import Loader from '@/components/loader.vue';
     if(timeout) {
       clearTimeout(timeout);
     }
+    isLoading.value = true;
     try {
       const tokens: LoginResponse = await userLogIn(loginData);
       localStorage.setItem('refreshToken', tokens.refreshToken);

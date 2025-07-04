@@ -2,10 +2,17 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AlamandaApi.Services.User {
+  
+  public class PermissionModel {
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
 
-  public class UserModel {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Required, StringLength(50)]
+    public string Name { get; set; } = null!;
+  }
+
+  public class UserEdit {
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     [Required, StringLength(50)]
@@ -14,18 +21,21 @@ namespace AlamandaApi.Services.User {
     [Required, EmailAddress, StringLength(50)]
     public string Email { get; set; } = string.Empty;
 
+    public string? Picture { get; set; }
+
+    public int? PermissionId { get; set; }
+    public PermissionModel? Permission { get; set; }
+  }
+
+  public class UserModel : UserEdit {
     [Required, StringLength(100, MinimumLength = 6), DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
-
-    [Required, StringLength(20)]
-    public string Permission { get; set; } = "user";
 
     public ICollection<RefreshTokenModel> RefreshTokens { get; set; } = new List<RefreshTokenModel>();
   }
 
   public class RefreshTokenModel {
-    [Key]
-    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     [Required]

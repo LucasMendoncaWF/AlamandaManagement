@@ -12,7 +12,7 @@ namespace AlamandaApi.Services.Team {
     [MaxLength(50)]
     public string Social { get; set; } = null!;
 
-    public string? Picture { get; set; } = "user";
+    public string? Picture { get; set; } = null;
     public RoleModel? Role { get; set; }
     public virtual int? RoleId { get; set; } = null;
   }

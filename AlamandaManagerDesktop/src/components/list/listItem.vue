@@ -5,7 +5,6 @@
     
     > div {
       min-width: 100px;
-      max-width: 200px;
       max-height: 50px;
       overflow-y: auto;
       overflow-x: hidden;

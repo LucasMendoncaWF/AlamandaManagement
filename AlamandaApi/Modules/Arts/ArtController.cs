@@ -1,3 +1,4 @@
+using AlamandaApi.Services.CRUD;
 using AlamandaApi.Services.FieldsSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +31,6 @@ namespace AlamandaApi.Services.Art {
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update([FromBody] ArtModel art) {
       try {
-        var existingUser = await _artService.GetById(art.Id);
         var result = await _artService.Update(art);
         return Ok(new { result });
       }
@@ -42,9 +42,9 @@ namespace AlamandaApi.Services.Art {
 
     [HttpGet("")]
     [AllowAnonymous]
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10, string queryString = "") {
+    public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
-        var result = await _artService.GetAll(page, pageSize, queryString);
+        var result = await _artService.GetAll(query);
         return Ok(result);
       }
       catch (Exception ex) {
@@ -53,7 +53,7 @@ namespace AlamandaApi.Services.Art {
     }  
     
     [HttpGet("fields")]
-    [AllowAnonymous]
+    [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> getFields() {
       try {
         var result = await _fieldSchemaService.GetFieldTypes("FanArts");

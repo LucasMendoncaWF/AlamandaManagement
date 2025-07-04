@@ -8,7 +8,7 @@ namespace AlamandaApi.Services.Art {
     [MaxLength(50)]
     public string Social { get; set; } = null!;
 
-    public string? Picture { get; set; } = "user";
+    public string? Picture { get; set; } = null;
   }
   
   public class ArtModel : ArtCreationModel {

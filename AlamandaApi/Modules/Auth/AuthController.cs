@@ -5,16 +5,16 @@ namespace AlamandaApi.Controllers {
   [ApiController]
   [Route("[controller]")]
   public class AuthController : ControllerBase {
-    private readonly UserService _userService;
+    private readonly AuthService _authService;
 
-    public AuthController(UserService userService) {
-        _userService = userService;
+    public AuthController(AuthService authService) {
+        _authService = authService;
     }
 
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequest request) {
       try {
-        var authResponse = await _userService.RegisterUserAsync(request);
+        var authResponse = await _authService.RegisterUserAsync(request);
         return Ok(authResponse);
       }
       catch (Exception ex) {
@@ -25,7 +25,7 @@ namespace AlamandaApi.Controllers {
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request) {
       try {
-        var authResponse = await _userService.LoginUserAsync(request);
+        var authResponse = await _authService.LoginUserAsync(request);
 
         return Ok(authResponse);
       } catch (Exception ex) {
@@ -36,7 +36,7 @@ namespace AlamandaApi.Controllers {
     [HttpPost("admin")]
     public async Task<IActionResult> AdminLogin([FromBody] LoginRequest request) {
       try {
-        var authResponse = await _userService.LoginAdminAsync(request);
+        var authResponse = await _authService.LoginAdminAsync(request);
         return Ok(authResponse);
       } catch (Exception ex) {
         return Unauthorized(new { ex.Message });
@@ -46,7 +46,7 @@ namespace AlamandaApi.Controllers {
     [HttpPost("refresh")]
     public async Task<IActionResult> Refresh([FromBody] RefreshTokenRequest body) {
       try {
-        var authResponse = await _userService.RefreshTokenAsync(body.RefreshToken);
+        var authResponse = await _authService.RefreshTokenAsync(body.RefreshToken);
         return Ok(authResponse);
       } catch (Exception ex) {
         return Unauthorized(new { ex.Message });
@@ -57,7 +57,7 @@ namespace AlamandaApi.Controllers {
     [HttpPost("logout")]
     public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest body) {
       try {
-        var success = await _userService.LogoutAsync(body.RefreshToken);
+        var success = await _authService.LogoutAsync(body.RefreshToken);
         return Ok(success);
       } catch (Exception ex) {
         return Unauthorized(new { ex.Message });

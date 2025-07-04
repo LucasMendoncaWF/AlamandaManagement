@@ -14,6 +14,7 @@ namespace AlamandaApi.Data {
     public DbSet<ComicModel> Comics { get; set; }
     public DbSet<RoleModel> Roles { get; set; }
     public DbSet<ArtModel> FanArts { get; set; }
+    public DbSet<PermissionModel> Permissions { get; set; }
 
     public class PagedResult<T> {
       public List<T> Items { get; set; } = [];
@@ -37,6 +38,12 @@ namespace AlamandaApi.Data {
         .HasOne(tm => tm.Role)
         .WithMany()
         .HasForeignKey(tm => tm.RoleId)
+        .OnDelete(DeleteBehavior.SetNull);
+
+      modelBuilder.Entity<UserModel>()
+        .HasOne(tm => tm.Permission)
+        .WithMany()
+        .HasForeignKey(tm => tm.PermissionId)
         .OnDelete(DeleteBehavior.SetNull);
     }
   }

@@ -46,7 +46,7 @@
     typeof value === 'string' && /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(value);
 
   const imageField = computed(() => {
-    return Object.keys(props.item).find((key) => isImageUrl(props.item[key]));
+    return Object.keys(props.item).find((key) => isImageUrl(props.item[key]) || key.toLowerCase() === 'picture');
   });
 
   const restFields = computed(() => {
