@@ -1,4 +1,3 @@
-using System.Linq.Expressions;
 using AlamandaApi.Services.CRUD;
 using static AlamandaApi.Data.AppDbContext;
 
@@ -29,12 +28,16 @@ namespace AlamandaApi.Services.User {
       );
       return result;
     }
+    
+    public async Task Delete(int Id) {
+      await _crudService.DeleteByIdAsync(Id);
+    }
 
     public async Task<PagedResult<UserEdit>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(
-        query,
-        new HashSet<string> { "Id", "Username", "Email", "PermissionId" },
-        u => new UserEdit {
+      return await _crudService.GetPagedAsync(new ListOptions<UserModel, UserEdit> {
+        QueryParams = query,
+        AllowedSortColumns = new HashSet<string> { "Id", "Username", "Email", "PermissionId" },
+        Selector = u => new UserEdit {
           Id = u.Id,
           Username = u.Username,
           Email = u.Email,
@@ -44,6 +47,7 @@ namespace AlamandaApi.Services.User {
             Id = u.Permission.Id,
             Name = u.Permission.Name
           }
+        },
       });
     }
 

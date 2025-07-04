@@ -18,19 +18,24 @@ export interface ArtResponse extends ApiResponseData {
   social: string;
   picture: string;
 }
+const endpoint = 'art';
 
 export async function addArt(body: ArtSubmitForm) {
-  return await restApi<ArtResponse>({url: 'art', method: 'POST', body});
+  return await restApi<ArtResponse>({url: endpoint, method: 'POST', body});
 }
 
 export async function updateArt(body: ArtSubmitForm) {
-  return await restApi<ArtResponse>({url: 'art', method: 'PUT', body});
+  return await restApi<ArtResponse>({url: endpoint, method: 'PUT', body});
 }
 
 export async function getArts(params: Record<string, unknown>) {
-  return await restApi<ListResponse<ArtResponse>>({url: 'art', method: 'GET', params});
+  return await restApi<ListResponse<ArtResponse>>({url: endpoint, method: 'GET', params});
+}
+
+export async function deleteArt(id: number) {
+  return await restApi({url: endpoint, method: 'DELETE', params : {id}});
 }
 
 export async function getArtFields() {
-  return await restApi<FormFieldModel>({url: 'art/fields', method: 'GET'});
+  return await restApi<FormFieldModel>({url: `${endpoint}/fields`, method: 'GET'});
 }

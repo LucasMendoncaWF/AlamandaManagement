@@ -37,15 +37,20 @@ namespace AlamandaApi.Services.Art {
       return result;
     }
 
+    public async Task Delete(int Id) {
+      await _crudService.DeleteByIdAsync(Id);
+    }
+
     public async Task<PagedResult<ArtModel>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(
-        query,
-        new HashSet<string> { "Id", "Social" },
-        u => new ArtModel {
+      return await _crudService.GetPagedAsync(new ListOptions<ArtModel, ArtModel> {
+        QueryParams = query,
+        AllowedSortColumns = new HashSet<string> { "Id", "Social" },
+        Selector = u => new ArtModel {
           Id = u.Id,
           Social = u.Social,
           Picture = u.Picture
-        });
+        }
+      });
     }
 
     public async Task<ArtModel?> GetById(int id) {

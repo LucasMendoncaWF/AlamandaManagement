@@ -143,7 +143,7 @@
         </template>
       </div>
       <div class="form-buttons">
-        <FormButton variant="danger" v-if="data?.id" :disabled="isLoading" @click="onDelete">Delete</FormButton>
+        <FormButton variant="danger" v-if="data?.id" :disabled="isLoading" @click="() => onDelete(data?.id)">Delete</FormButton>
         <FormButton variant="inverted" :disabled="isLoading" @click="onCancel">Cancel</FormButton>
         <FormSubmit :disabled="isLoading" :value="data?.id ? 'Save' : 'Create'" />
       </div>

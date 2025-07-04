@@ -14,19 +14,20 @@ public static class ImageHandler {
   }
 
   public static async Task<string?> SaveImage(string? base64Image, ImageSaveOptions options) {
+    var folder = options.Folder.Replace("Model", "");
     if (!string.IsNullOrEmpty(base64Image) && base64Image.StartsWith("data:image")) {
       if (!string.IsNullOrEmpty(options.PreviousImage)) {
         var previousFileName = Path.GetFileName(options.PreviousImage);
-        var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, options.Folder, previousFileName);
+        var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder, previousFileName);
 
         if (File.Exists(previousFilePath)) {
           File.Delete(previousFilePath);
         }
       }
-      var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, options.Folder);
+      var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder);
       Directory.CreateDirectory(uploadsFolder);
 
-      var fileName = $"{options.Name}_{DateTime.Now:HH-mm-ss}.webp";
+      var fileName = $"{options.Name}_{DateTime.Now:dd-MM-yy-HH-mm-ss}.webp";
       var filePath = Path.Combine(uploadsFolder, fileName);
       var base64Data = base64Image.Contains(",") ? base64Image.Split(",")[1] : base64Image;
       var imageBytes = Convert.FromBase64String(base64Data);
@@ -45,11 +46,11 @@ public static class ImageHandler {
       await using var outputStream = new FileStream(filePath, FileMode.Create);
       await image.SaveAsync(outputStream, encoder);
 
-      return $"{IMAGES_STORAGE}/{IMAGES_FOLDER}/{options.Folder}/{fileName}";
+      return $"{IMAGES_STORAGE}/{IMAGES_FOLDER}/{folder}/{fileName}";
     }
     else if (!string.IsNullOrEmpty(options.PreviousImage) && string.IsNullOrEmpty(base64Image)) {
       var previousFileName = Path.GetFileName(options.PreviousImage);
-      var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, options.Folder, previousFileName);
+      var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder, previousFileName);
 
       if (File.Exists(previousFilePath)) {
         File.Delete(previousFilePath);

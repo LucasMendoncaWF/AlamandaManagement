@@ -40,6 +40,18 @@ namespace AlamandaApi.Services.User {
         return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
       }
     }  
+
+    [HttpDelete("")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> Delete([FromQuery] int id) {
+      try {
+        await _userService.Delete(id);
+        return Ok(new { success = true });
+      }
+      catch (Exception ex) {
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
+      }
+    }  
     
     [HttpGet("fields")]
     [Authorize(Policy = "AdminOnly")]

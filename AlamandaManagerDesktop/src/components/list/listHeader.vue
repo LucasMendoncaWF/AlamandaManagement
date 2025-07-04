@@ -13,6 +13,24 @@
     font-weight: bold;
     letter-spacing: 1.5px;
     color: $white;
+
+    &.sortable {
+      cursor: pointer;
+
+      &:hover {
+        opacity: 0.6;
+      }
+    }
+
+    .direction {
+      &--up{
+        color: red;
+      }
+
+      &--down{
+        color: blue;
+      }
+    }
   }
 </style>
 
@@ -24,20 +42,25 @@
     </th>
 
     <th
+      class="sortable"
       v-for="key in restFields"
       :key="key"
     >
-      {{ key }}
+      <span role="button" @click="() => sortHeader(key)">{{ key }}</span>
+      <span v-if="sortBy === key" :class="`direction--${sortDirection === 'ascending' ? 'up' : 'down'}`">x</span>
     </th>
   </thead>
 </template>
 
 <script lang="ts" setup>
   import { computed } from 'vue';
-  import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
+  import { ApiResponseData, ResponseKeyType, SortDirection } from '@/api/defaultApi';
 
   interface Props<T = ApiResponseData> {
     item: T;
+    sortHeader: (name: string) => void;
+    sortBy: string;
+    sortDirection: SortDirection;
   }
 
   const props = defineProps<Props>();

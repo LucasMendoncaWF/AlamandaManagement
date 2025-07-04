@@ -23,9 +23,13 @@ export interface ListResponse<T extends ApiResponseData>{
   currentPage: number;
 }
 
+export type SortDirection = 'descending' | 'ascending';
+
 export interface QueryParams {
   page: number;
   queryString: string;
+  sortDirection: SortDirection;
+  sortBy: string;
 }
 
 async function refreshAccessToken() {

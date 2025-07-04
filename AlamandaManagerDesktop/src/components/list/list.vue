@@ -43,8 +43,11 @@
 <template>
   <div class="list">
     <ListSearch :onClickCreate="onOpenForm" :onSearch="onSearch" :title="title" />
+    <div v-if="deleteId">
+      DELETE COMPONENT MODAL TODO
+    </div>
     <ListForm 
-      v-if="isFormOpen"
+      v-if="isFormOpen && !deleteId"
       :onCancel="onCancelEdit"
       :onDelete="onClickDelete"
       :addItem="addItemFunction"
@@ -59,7 +62,7 @@
     />
     <div class="list-scroll" v-if="!isError && !(data && !data.items.length)">
       <table class="list-table">
-        <ListHeader v-if="data && data.items.length" :item="data.items[0]" />
+        <ListHeader :sortBy="sortBy" :sortDirection="sortDirection" :sortHeader="onClickHeader" v-if="data && data.items.length" :item="data.items[0]" />
         <tbody >
           <tr
             v-if="data && data.items.length" 
@@ -96,7 +99,7 @@
   import { computed, ref } from 'vue';
   import queryKeys from '@/api/queryKeys';
   import { useQuery } from '@tanstack/vue-query';
-  import { ListResponse, ApiResponseData, QueryParams } from '@/api/defaultApi';
+  import { ListResponse, ApiResponseData, QueryParams, SortDirection } from '@/api/defaultApi';
   import ListItem from './listItem.vue';
   import Loader from '../loader.vue';
   import ListHeader from './listHeader.vue';
@@ -112,11 +115,14 @@
     addItemFunction: (data: Object) => void;
     getFieldFunction: () => FormFieldModel[];
     updateItemFunction: (data: Object) => void;
+    deleteFunction: (id: number) => void;
   }
 
   const props = defineProps<Props>();
   const currentPage = ref(1);
   const isFormOpen = ref(false);
+  const sortBy = ref('');
+  const sortDirection = ref<SortDirection>('descending');
   const queryString = ref('');
   const editId = ref<number | null>(null);
   const deleteId = ref<number | null>(null);
@@ -128,6 +134,7 @@
   const onClickEdit = (id?: number) => {
     if(!id) { return }
     editId.value = id;
+    deleteId.value = null;
     onOpenForm();
   }
 
@@ -138,6 +145,13 @@
   const onClickDelete = (id?: number) => {
     if(!id) { return }
     deleteId.value = id;
+  }
+
+  const confirmDelete = async () => {
+    if(deleteId.value) {
+      await props.deleteFunction(deleteId.value);
+      await refetch();
+    }
   }
 
   const onCancelEdit = () => {
@@ -154,15 +168,29 @@
     onCancelEdit();
   }
 
+  const onClickHeader = (name: string) => {
+    if(sortBy.value === name) {
+      if(sortDirection.value === 'ascending') {
+        sortDirection.value = 'descending';
+        sortBy.value = '';
+        return;
+      }
+      sortDirection.value = 'ascending';
+      return;
+    }
+
+    sortBy.value = name;
+  }
+
   const listQueryKey = computed(() => [
     queryKeys.List,
-    { title: props.title, page: currentPage.value, queryString: queryString.value }
+    { title: props.title, queryString: queryString.value, sortBy: sortBy.value, sortDirection: sortDirection.value, page: currentPage.value }
   ]);
 
   const { isPending, isError, data, refetch } = useQuery({
     queryKey: [listQueryKey],
     async queryFn() {
-      return await props.searchFunction({queryString: queryString.value, page: currentPage.value});
+      return await props.searchFunction({queryString: queryString.value, sortBy: sortBy.value, sortDirection: sortDirection.value, page: currentPage.value});
     },
     
   });

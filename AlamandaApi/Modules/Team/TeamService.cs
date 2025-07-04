@@ -44,7 +44,7 @@ namespace AlamandaApi.Services.Team {
               currentCollection: existing.Comics,
               newIds: updated.ComicsIds,
               dbSet: context.Comics,
-              idSelector: comic => comic.Id.ToString()
+              idSelectorExpr: comic => comic.Id
             );
             return existing;
           },
@@ -52,12 +52,16 @@ namespace AlamandaApi.Services.Team {
       );
       return result;
     }
+    
+    public async Task Delete(int Id) {
+      await _crudService.DeleteByIdAsync(Id);
+    }
 
     public async Task<PagedResult<TeamMemberModel>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(
-        query,
-        new HashSet<string> { "Id", "Social", "Name"},
-        u => new TeamMemberModel {
+      return await _crudService.GetPagedAsync(new ListOptions<TeamMemberModel, TeamMemberModel> {
+        QueryParams = query,
+        AllowedSortColumns = new HashSet<string> { "Id", "Social", "Name" },
+        Selector = u => new TeamMemberModel {
           Id = u.Id,
           Social = u.Social,
           Name = u.Name,
@@ -71,7 +75,8 @@ namespace AlamandaApi.Services.Team {
             Id = u.Role.Id,
             Name = u.Role.Name
           }
-        });
+        }
+      });
     }
 
     public async Task<TeamMemberModel?> GetById(int id) {

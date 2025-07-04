@@ -8,10 +8,11 @@
     :getFieldFunction="getMembersFields"
     :addItemFunction="addMember"
     :updateItemFunction="updateMember"
+    :deleteFunction="deleteMember"
   />
 </template>
 
 <script setup>
   import List from '@/components/list/list.vue';
-  import { getMembers, getMembersFields, addMember, updateMember } from '@/api/teamMembers';
+  import { getMembers, getMembersFields, addMember, updateMember, deleteMember } from '@/api/teamMembers';
 </script>
