@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using AlamandaApi.Services.Comics;
 using AlamandaApi.Services.CRUD;
 using static AlamandaApi.Data.AppDbContext;
+using AlamandaApi.Services.Role;
 
 namespace AlamandaApi.Services.Team {
   public class TeamService {
@@ -15,15 +16,23 @@ namespace AlamandaApi.Services.Team {
       var result = await _crudService.CreateEntityAsync(
         new UpdateEntityOptions<TeamMemberModel, TeamMemberCreationModel> {
           UpdatedObject = member,
-          Include = q => q.Include(m => m.Comics),
+          Include = q => q.Include(m => m.Comics).Include(m => m.Roles),
           PropertiesToUpdate = ["Social", "Name"],
           CustomUpdate = async (existing, updated, tableName, _) => {
+          var rolesIds = updated.RolesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
+          var comicIds = updated.ComicsIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
             existing.Picture = await ImageHandler.SaveImage(updated.Picture, CreateImage(existing, tableName));
-            if (updated.ComicsIds?.Any() == true) {
+            if (comicIds?.Any() == true) {
               var relatedComics = await _crudService.Context.Comics
-                .Where(c => updated.ComicsIds.Contains(c.Id.ToString()))
+                .Where(c => comicIds.Contains(c.Id))
                 .ToListAsync();
               existing.Comics = relatedComics;
+            }
+            if (rolesIds?.Any() == true) {
+              var relatedRoles = await _crudService.Context.Roles
+                .Where(c => rolesIds.Contains(c.Id))
+                .ToListAsync();
+              existing.Roles = relatedRoles;
             }
             return existing;
           }
@@ -36,15 +45,23 @@ namespace AlamandaApi.Services.Team {
       var result = await _crudService.UpdateEntityAsync(
         new UpdateEntityOptions<TeamMemberModel, TeamMemberEditModel> {
           UpdatedObject = member,
-          Include = q => q.Include(m => m.Comics),
-          PropertiesToUpdate = ["Social", "Name", "RoleId"],
+          Include = q => q.Include(m => m.Comics).Include(m => m.Roles),
+          PropertiesToUpdate = ["Social", "Name"],
           CustomUpdate = async (existing, updated, tableName, context) => {
+          var rolesIds = updated.RolesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
+          var comicIds = updated.ComicsIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
             existing.Picture = await ImageHandler.SaveImage(updated.Picture, CreateImage(existing, tableName));
             await _crudService.SyncManyToManyRelation(
               currentCollection: existing.Comics,
-              newIds: updated.ComicsIds,
+              newIds: comicIds,
               dbSet: context.Comics,
               idSelectorExpr: comic => comic.Id
+            );
+            await _crudService.SyncManyToManyRelation(
+              currentCollection: existing.Roles,
+              newIds: rolesIds,
+              dbSet: context.Roles,
+              idSelectorExpr: role => role.Id
             );
             return existing;
           },
@@ -60,21 +77,20 @@ namespace AlamandaApi.Services.Team {
     public async Task<PagedResult<TeamMemberModel>> GetAll(ListQueryParams query) {
       return await _crudService.GetPagedAsync(new ListOptions<TeamMemberModel, TeamMemberModel> {
         QueryParams = query,
-        AllowedSortColumns = new HashSet<string> { "Id", "Social", "Name" },
+        AllowedSortColumns = new HashSet<string> { "Social", "Name" },
         Selector = u => new TeamMemberModel {
           Id = u.Id,
           Social = u.Social,
           Name = u.Name,
           Picture = u.Picture,
-          RoleId = u.RoleId,
           Comics = u.Comics.Select(c => new ComicModel {
             Id = c.Id,
             Name = c.Name
           }).ToList(),
-          Role = u.Role == null ? null : new RoleModel {
-            Id = u.Role.Id,
-            Name = u.Role.Name
-          }
+          Roles = u.Roles.Select(r => new RoleModel {
+            Id = r.Id,
+            Name = r.Name
+          }).ToList(),
         }
       });
     }

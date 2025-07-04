@@ -1,7 +1,7 @@
 <style lang="scss" scoped>
   @use '@/assets/variables.scss' as *;
   .sidebar {
-    width: 68px;
+    width: 40px;
     background-color: $secondary;
     height: 100vh;
     padding: 0 20px;
@@ -9,7 +9,7 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
-    gap: 4%;
+    gap: 3%;
 
     .icon {
       text-align: center;
@@ -23,12 +23,12 @@
 
       label {
         display: block;
-        font-size: 12px;
+        font-size: 11px;
         color: $white;
       }
 
       img {
-        width: 40px;
+        width: 35px;
       }
     }
   }
@@ -59,7 +59,7 @@ import urls from '@/router/urls';
     },
     {
       label: 'Comics',
-      url: '/',
+      url: urls.comics,
       image: new URL('@/assets/icons/icon_library.svg', import.meta.url).href
     },
     {
@@ -76,6 +76,11 @@ import urls from '@/router/urls';
       label: 'Arts',
       url: urls.arts,
       image: new URL('@/assets/icons/icon_art.svg', import.meta.url).href
+    },
+    {
+      label: 'Roles',
+      url: urls.roles,
+      image: new URL('@/assets/icons/icon_roles.svg', import.meta.url).href
     }
   ];
 

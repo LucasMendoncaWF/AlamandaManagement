@@ -27,7 +27,7 @@ namespace AlamandaApi.Services.User {
       try {
         var user = new UserModel {
           Email = request.Email,
-          Username = request.Username
+          UserName = request.UserName
         };
         user.Password = BCrypt.Net.BCrypt.HashPassword(request.Password);
 

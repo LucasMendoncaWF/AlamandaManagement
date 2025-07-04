@@ -47,11 +47,35 @@
       }
     }
     }
+
+    .button-loading {
+      width: 12px;
+      height: 12px;
+      border: 2px solid #FFF;
+      border-bottom-color: transparent;
+      border-radius: 50%;
+      display: inline-block;
+      box-sizing: border-box;
+      animation: rotation 1s linear infinite;
+      margin-right: 5px;
+    }
+
+    @keyframes rotation {
+      0% {
+          transform: rotate(0deg);
+      }
+      100% {
+          transform: rotate(360deg);
+      }
+    } 
   }
 </style>
 
 <template>
-  <button type="button" :disabled="disabled" :class="`form-button form-button--${variant}`" v-bind="attrs" @click="onClick"><slot/></button>
+  <button type="button" :disabled="disabled || isLoading" :class="`form-button form-button--${variant}`" v-bind="attrs" @click="onClick">
+    <span v-if="isLoading" class="button-loading"></span>
+    <slot/>
+  </button>
 </template>
 
 <script lang="ts" setup>
@@ -60,6 +84,7 @@
     onClick?: () => void;
     variant?: 'inverted' | 'danger';
     disabled?: boolean;
+    isLoading?: boolean;
   }
 
   defineProps<Props>();

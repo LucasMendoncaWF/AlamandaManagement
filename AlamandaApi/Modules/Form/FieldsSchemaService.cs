@@ -1,17 +1,17 @@
 using Microsoft.EntityFrameworkCore;
 using System.Data;
 using AlamandaApi.Data;
-using MySqlConnector;
+using Npgsql;
 
 namespace AlamandaApi.Services.FieldsSchema {
   public enum FieldDataType {
     String = 0,
     Number = 1,
     Date = 2,
-    Image = 3,
-    ImageArray = 4,
-    OptionsArray = 5,
-    Options = 6
+    Options = 3,
+    Image = 4,
+    ImageArray = 5,
+    OptionsArray = 6,
   }
 
   public class FieldInfo {
@@ -39,20 +39,20 @@ namespace AlamandaApi.Services.FieldsSchema {
       var foreignKeys = new Dictionary<string, string>();
       var foundJunctions = new Dictionary<string, string>();
 
-      await using var conn = _context.Database.GetDbConnection();
-      if (conn.State != ConnectionState.Open)
-        await conn.OpenAsync();
+      await using var conn = new NpgsqlConnection(_context.Database.GetConnectionString());
+      await conn.OpenAsync();
 
       await using (var relCmd = conn.CreateCommand()) {
         relCmd.CommandText = @"
-          SELECT rel.TABLE_NAME, rel.COLUMN_NAME, rel.REFERENCED_TABLE_NAME
-          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE rel
-          WHERE rel.REFERENCED_TABLE_NAME = @currentTable AND rel.TABLE_SCHEMA = DATABASE();";
+          SELECT tc.table_name, kcu.column_name, ccu.table_name AS foreign_table_name
+          FROM information_schema.table_constraints AS tc
+          JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name AND tc.table_schema = kcu.table_schema
+          JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name AND ccu.table_schema = tc.table_schema
+          WHERE tc.constraint_type = 'FOREIGN KEY' AND ccu.table_name = @currentTable;";
 
-        var relParam = relCmd.CreateParameter();
-        relParam.ParameterName = "@currentTable";
-        relParam.Value = tableName;
-        relCmd.Parameters.Add(relParam);
+        relCmd.Parameters.AddWithValue("@currentTable", tableName);
 
         await using var relReader = await relCmd.ExecuteReaderAsync();
         while (await relReader.ReadAsync()) {
@@ -67,24 +67,24 @@ namespace AlamandaApi.Services.FieldsSchema {
 
       await using (var cmd = conn.CreateCommand()) {
         cmd.CommandText = @"
-          SELECT 
-            c.COLUMN_NAME, 
-            c.DATA_TYPE, 
-            c.CHARACTER_MAXIMUM_LENGTH, 
-            c.COLUMN_TYPE, 
-            c.IS_NULLABLE,
-            k.REFERENCED_TABLE_NAME
-          FROM INFORMATION_SCHEMA.COLUMNS c
-          LEFT JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE k
-            ON c.TABLE_NAME = k.TABLE_NAME 
-            AND c.COLUMN_NAME = k.COLUMN_NAME 
-            AND k.TABLE_SCHEMA = c.TABLE_SCHEMA
-          WHERE c.TABLE_NAME = @table AND c.TABLE_SCHEMA = DATABASE();";
+          SELECT
+            cols.column_name,
+            cols.data_type,
+            cols.character_maximum_length,
+            cols.udt_name,
+            cols.is_nullable,
+            ccu.table_name AS referenced_table,
+            tc.constraint_type
+          FROM information_schema.columns cols
+          LEFT JOIN information_schema.key_column_usage kcu
+            ON cols.table_name = kcu.table_name AND cols.column_name = kcu.column_name AND cols.table_schema = kcu.table_schema
+          LEFT JOIN information_schema.constraint_column_usage ccu
+            ON kcu.constraint_name = ccu.constraint_name AND kcu.table_schema = ccu.table_schema
+          LEFT JOIN information_schema.table_constraints tc
+            ON kcu.constraint_name = tc.constraint_name AND kcu.table_schema = tc.table_schema
+          WHERE cols.table_name = @table AND cols.table_schema = 'public';";
 
-        var param = cmd.CreateParameter();
-        param.ParameterName = "@table";
-        param.Value = tableName;
-        cmd.Parameters.Add(param);
+        cmd.Parameters.AddWithValue("@table", tableName);
 
         await using var reader = await cmd.ExecuteReaderAsync();
         while (await reader.ReadAsync()) {
@@ -94,15 +94,17 @@ namespace AlamandaApi.Services.FieldsSchema {
           var columnType = reader.GetString(3).ToLower();
           var isNullable = reader.GetString(4).Equals("YES", StringComparison.OrdinalIgnoreCase);
           var fkTable = reader.IsDBNull(5) ? null : reader.GetString(5);
-          var isForeignKey = fkTable != null;
-          var isJunction = fkTable != null && junctionTables.Contains(fkTable.ToLower());
+          var constraintType = reader.IsDBNull(6) ? null : reader.GetString(6);
+
+          var isForeignKey = constraintType == "FOREIGN KEY" && fkTable != null;
+          var isJunction = isForeignKey && fkTable != null && junctionTables.Contains(fkTable.ToLower());
 
           var inferredType = InferType(name.ToLower(), sqlType, columnType, isForeignKey, isJunction);
-          
+
           var lowerName = name.ToLower();
-          if (name.ToLower() != "id" && (excludedFields == null || !excludedFields.Contains(lowerName))) {
+          if (lowerName != "id" && (excludedFields == null || !excludedFields.Contains(lowerName))) {
             fields.Add(new FieldInfo {
-              FieldName = name.ToLower(),
+              FieldName = lowerName,
               DataType = inferredType,
               FieldMaxSize = maxLength,
               OptionsArray = null,
@@ -111,7 +113,7 @@ namespace AlamandaApi.Services.FieldsSchema {
           }
 
           if ((inferredType == FieldDataType.Options || inferredType == FieldDataType.OptionsArray) && fkTable != null)
-            foreignKeys[name.ToLower()] = fkTable;
+            foreignKeys[lowerName] = fkTable;
         }
         reader.Close();
       }
@@ -126,19 +128,14 @@ namespace AlamandaApi.Services.FieldsSchema {
       foreach (var junction in foundJunctions.Keys) {
         await using var otherFkCmd = conn.CreateCommand();
         otherFkCmd.CommandText = @"
-          SELECT COLUMN_NAME, REFERENCED_TABLE_NAME
-          FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-          WHERE TABLE_NAME = @junction AND TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME != @currentTable;";
+          SELECT kcu.column_name, ccu.table_name AS referenced_table
+          FROM information_schema.table_constraints tc
+          JOIN information_schema.key_column_usage kcu ON tc.constraint_name = kcu.constraint_name
+          JOIN information_schema.constraint_column_usage ccu ON ccu.constraint_name = tc.constraint_name
+          WHERE tc.table_name = @junction AND tc.constraint_type = 'FOREIGN KEY' AND ccu.table_name != @currentTable;";
 
-        var j1 = otherFkCmd.CreateParameter();
-        j1.ParameterName = "@junction";
-        j1.Value = junction;
-        otherFkCmd.Parameters.Add(j1);
-
-        var j2 = otherFkCmd.CreateParameter();
-        j2.ParameterName = "@currentTable";
-        j2.Value = tableName;
-        otherFkCmd.Parameters.Add(j2);
+        otherFkCmd.Parameters.AddWithValue("@junction", junction);
+        otherFkCmd.Parameters.AddWithValue("@currentTable", tableName);
 
         await using var reader2 = await otherFkCmd.ExecuteReaderAsync();
         while (await reader2.ReadAsync()) {
@@ -159,7 +156,7 @@ namespace AlamandaApi.Services.FieldsSchema {
       if (isForeignKey) return isJunction ? FieldDataType.OptionsArray : FieldDataType.Options;
       if (name.Contains("pictures") && columnType.StartsWith("json")) return FieldDataType.ImageArray;
       if (name.Contains("picture")) return FieldDataType.Image;
-      if (sqlType.Contains("int") || sqlType is "decimal" or "float" or "double") return FieldDataType.Number;
+      if (sqlType.Contains("int") || sqlType is "numeric" or "decimal" or "float" or "double precision") return FieldDataType.Number;
       if (sqlType.Contains("date") || sqlType.Contains("time")) return FieldDataType.Date;
       return FieldDataType.String;
     }
@@ -168,11 +165,11 @@ namespace AlamandaApi.Services.FieldsSchema {
       var result = new List<Option>();
       var connStr = _context.Database.GetConnectionString();
 
-      await using var conn = new MySqlConnection(connStr);
+      await using var conn = new NpgsqlConnection(connStr);
       await conn.OpenAsync();
 
       await using var cmd = conn.CreateCommand();
-      cmd.CommandText = $"SELECT * FROM `{table}` LIMIT 100;";
+      cmd.CommandText = $"SELECT * FROM \"{table}\" LIMIT 100;";
       await using var reader = await cmd.ExecuteReaderAsync();
       while (await reader.ReadAsync()) {
         var id = Try(reader, "id");

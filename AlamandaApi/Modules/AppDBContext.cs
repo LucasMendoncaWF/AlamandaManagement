@@ -3,6 +3,10 @@ using AlamandaApi.Services.User;
 using AlamandaApi.Services.Team;
 using AlamandaApi.Services.Comics;
 using AlamandaApi.Services.Art;
+using AlamandaApi.Services.Role;
+using AlamandaApi.Services.Chapters;
+using AlamandaApi.Services.Category;
+using AlamandaApi.Services.Cart;
 
 namespace AlamandaApi.Data {
   public class AppDbContext : DbContext {
@@ -12,6 +16,9 @@ namespace AlamandaApi.Data {
     public DbSet<TeamMemberModel> TeamMembers { get; set; }
     public DbSet<RefreshTokenModel> RefreshTokens { get; set; }
     public DbSet<ComicModel> Comics { get; set; }
+    public DbSet<CategoryModel> Categories { get; set; }
+    public DbSet<ChapterModel> Chapters { get; set; }
+    public DbSet<CartModel> Carts { get; set; }
     public DbSet<RoleModel> Roles { get; set; }
     public DbSet<ArtModel> FanArts { get; set; }
     public DbSet<PermissionModel> Permissions { get; set; }
@@ -29,22 +36,40 @@ namespace AlamandaApi.Data {
        .HasMany(tm => tm.Comics)
        .WithMany(c => c.TeamMembers)
        .UsingEntity<Dictionary<string, object>>(
-           "comicsmembers",
+           "ComicsMembers",
            j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId"),
            j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
        );
 
       modelBuilder.Entity<TeamMemberModel>()
-        .HasOne(tm => tm.Role)
-        .WithMany()
-        .HasForeignKey(tm => tm.RoleId)
-        .OnDelete(DeleteBehavior.SetNull);
+        .HasMany(tm => tm.Roles)
+        .WithMany(r => r.TeamMembers)
+        .UsingEntity<Dictionary<string, object>>(
+          "TeamMemberRole",
+          j => j.HasOne<RoleModel>().WithMany().HasForeignKey("RolesId"),
+          j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
+        );
 
       modelBuilder.Entity<UserModel>()
         .HasOne(tm => tm.Permission)
         .WithMany()
         .HasForeignKey(tm => tm.PermissionId)
         .OnDelete(DeleteBehavior.SetNull);
+
+      modelBuilder.Entity<UserModel>()
+          .HasOne(u => u.Cart)
+          .WithOne(c => c.User)
+          .HasForeignKey<CartModel>(c => c.UserId);
+
+      modelBuilder.Entity<CartItemModel>()
+          .HasOne(ci => ci.Cart)
+          .WithMany(c => c.Items)
+          .HasForeignKey(ci => ci.CartId);
+
+      modelBuilder.Entity<CartItemModel>()
+          .HasOne(ci => ci.Comic)
+          .WithMany()
+          .HasForeignKey(ci => ci.ComicId);
     }
   }
 }

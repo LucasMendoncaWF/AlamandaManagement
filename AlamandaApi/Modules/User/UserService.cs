@@ -9,37 +9,45 @@ namespace AlamandaApi.Services.User {
       _crudService = crudService;
     }
 
-    public async Task<UserModel> AdminUpdate(UserEdit user) {
+    public async Task<UserModel> AdminUpdateUser(UserEdit user) {
       var result = await _crudService.UpdateEntityAsync(
-        new UpdateEntityOptions<UserModel, UserEdit>{
-          PropertiesToUpdate =  ["Email", "Username", "PermissionId"],
+        new UpdateEntityOptions<UserModel, UserEdit> {
+          PropertiesToUpdate = ["Email", "UserName", "PermissionId"],
           UpdatedObject = user,
           CustomUpdate = async (existing, updated, tableName, _) => {
-            existing.Picture = await ImageHandler.SaveImage(updated.Picture, new ImageHandler.ImageSaveOptions {
-              Name = updated.Id.ToString(),
-              Folder = tableName,
-              Quality = 60,
-              MaxWidth = 200,
-              PreviousImage = existing.Picture
-            });
+            existing.Picture = await ImageHandler.SaveImage(updated.Picture, CreateImage(existing, tableName));
             return existing;
           }
         }
       );
       return result;
     }
-    
+
+    public async Task<UserModel> AdminCreateUser(UserCreate user) {
+      var result = await _crudService.CreateEntityAsync(
+        new UpdateEntityOptions<UserModel, UserCreate> {
+          PropertiesToUpdate = ["Email", "UserName", "PermissionId"],
+          UpdatedObject = user,
+          CustomUpdate = async (existing, updated, tableName, _) => {
+            existing.Picture = await ImageHandler.SaveImage(updated.Picture, CreateImage(existing, tableName));
+            return existing;
+          }
+        }
+      );
+      return result;
+    }
+
     public async Task Delete(int Id) {
       await _crudService.DeleteByIdAsync(Id);
     }
 
-    public async Task<PagedResult<UserEdit>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(new ListOptions<UserModel, UserEdit> {
+    public async Task<PagedResult<UserListDto>> GetAll(ListQueryParams query) {
+      return await _crudService.GetPagedAsync(new ListOptions<UserModel, UserListDto> {
         QueryParams = query,
-        AllowedSortColumns = new HashSet<string> { "Id", "Username", "Email", "PermissionId" },
-        Selector = u => new UserEdit {
+        AllowedSortColumns = new HashSet<string> { "UserName", "Email", "PermissionId" },
+        Selector = u => new UserListDto {
           Id = u.Id,
-          Username = u.Username,
+          UserName = u.UserName,
           Email = u.Email,
           Picture = u.Picture,
           PermissionId = u.PermissionId,
@@ -53,6 +61,16 @@ namespace AlamandaApi.Services.User {
 
     public async Task<UserModel?> GetById(int id) {
       return await _crudService.GetByPropertyAsync("Id", id);
+    }
+    
+    public ImageHandler.ImageSaveOptions CreateImage(UserModel existing, string tableName) {
+      return new ImageHandler.ImageSaveOptions {
+        Name = existing.Id.ToString(),
+        Folder = tableName,
+        Quality = 60,
+        MaxWidth = 600,
+        PreviousImage = existing.Picture
+      };
     }
   }
 }

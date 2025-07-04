@@ -1,9 +1,8 @@
 <template>
   <List
     title="Fan Arts"
-    emptyMessage="No Fan Arts were found with this search"
-    errorMessage="An error occurred while searching for Fan Arts"
-    :maxImageSize="200"
+    label="FanArt"
+    :maxImageSize="1000"
     :searchFunction="getArts"
     :getFieldFunction="getArtFields"
     :addItemFunction="addArt"
@@ -12,7 +11,7 @@
   />
 </template>
 
-<script setup>
+<script lang="ts" setup>
   import List from '@/components/list/list.vue';
   import { getArts, getArtFields, addArt, updateArt, deleteArt } from '@/api/fanArts';
 </script>

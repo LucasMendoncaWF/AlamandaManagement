@@ -3,24 +3,24 @@ using AlamandaApi.Services.FieldsSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AlamandaApi.Services.Team {
+namespace AlamandaApi.Services.Role {
   [ApiController]
   [Route("[controller]")]
-  public class TeamController : ControllerBase {
-    private readonly TeamService _teamService;
+  public class RoleController : ControllerBase {
+    private readonly RoleService _roleService;
     private readonly FieldsSchemaService _fieldSchemaService;
 
-    public TeamController(TeamService teamService, FieldsSchemaService fieldSchemaService) {
-      _teamService = teamService;
+    public RoleController(RoleService roleService, FieldsSchemaService fieldSchemaService) {
+      _roleService = roleService;
       _fieldSchemaService = fieldSchemaService;
     }
 
     [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] TeamMemberCreationModel member) {
+    public async Task<IActionResult> Create([FromBody] RoleCreationModel role) {
       try {
-        var response = await _teamService.Create(member);
-        return Ok(new { response });
+        var result = await _roleService.Create(role);
+        return Ok(new { result });
       }
       catch (Exception ex) {
         return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
@@ -29,9 +29,9 @@ namespace AlamandaApi.Services.Team {
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update([FromBody] TeamMemberEditModel member) {
+    public async Task<IActionResult> Update([FromBody] RoleModel role) {
       try {
-        var result = await _teamService.Update(member);
+        var result = await _roleService.Update(role);
         return Ok(new { result });
       }
       catch (Exception ex) {
@@ -44,7 +44,7 @@ namespace AlamandaApi.Services.Team {
     [AllowAnonymous]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
-        var result = await _teamService.GetAll(query);
+        var result = await _roleService.GetAll(query);
         return Ok(result);
       }
       catch (Exception ex) {
@@ -56,7 +56,7 @@ namespace AlamandaApi.Services.Team {
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {
-        await _teamService.Delete(id);
+        await _roleService.Delete(id);
         return Ok(new { success = true });
       }
       catch (Exception ex) {
@@ -68,7 +68,8 @@ namespace AlamandaApi.Services.Team {
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> getFields() {
       try {
-        var result = await _fieldSchemaService.GetFieldTypes("TeamMembers");
+        var result = await _fieldSchemaService.GetFieldTypes("Roles");
+        result.RemoveAll(item => item.FieldName == "teammembers");
         return Ok(result);
       }
       catch {

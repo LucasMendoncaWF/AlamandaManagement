@@ -18,13 +18,23 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: urls.team,
-    name: 'tean',
+    name: 'team',
     component: () => import('@/sections/teamPage.vue'),
   },
   {
     path: urls.arts,
     name: 'arts',
     component: () => import('@/sections/artsPage.vue'),
+  },
+  {
+    path: urls.roles,
+    name: 'roles',
+    component: () => import('@/sections/rolesPage.vue'),
+  },
+  {
+    path: urls.comics,
+    name: 'comics',
+    component: () => import('@/sections/comicsPage.vue'),
   },
 ];
 

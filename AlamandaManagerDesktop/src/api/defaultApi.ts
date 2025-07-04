@@ -2,6 +2,9 @@ import { FormFieldOptionModel } from "@/models/formFieldModel";
 
 const API_URL = import.meta.env.VITE_API_URL;
 type Method = 'POST' | 'GET' | 'PUT' | 'DELETE';
+export interface HasId {
+  id: number
+}
 
 export type ResponseKeyType = string | number | Date | string[] | FormFieldOptionModel[] | null | undefined;
 export type ResponseObjectKeysTypes = Record<string, ResponseKeyType>;
@@ -9,11 +12,11 @@ export interface ApiResponseData extends ResponseObjectKeysTypes {
   id?: number;
 }
 
-interface RestRequest<P = Record<string, unknown>> {
+interface RestRequest {
   url: string;
   method?: Method;
   body?: object;
-  params?: P;
+  params?: QueryParams;
   headers?: HeadersInit;
 }
 
@@ -26,10 +29,11 @@ export interface ListResponse<T extends ApiResponseData>{
 export type SortDirection = 'descending' | 'ascending';
 
 export interface QueryParams {
-  page: number;
-  queryString: string;
-  sortDirection: SortDirection;
-  sortBy: string;
+  id?: number;
+  page?: number;
+  queryString?: string;
+  sortDirection?: SortDirection;
+  sortBy?: string | null;
 }
 
 async function refreshAccessToken() {
@@ -111,16 +115,24 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
 
   if (!response.ok) {
     let errorMessage = `Error ${response.status}`;
+
     try {
       const errorData = await response.json();
-      if (errorData && typeof errorData.message === 'string') {
-        errorMessage = errorData.message;
-      } else {
-        const errorText = await response.text();
-        if (errorText) errorMessage = errorText;
+      if (errorData) {
+        if (typeof errorData.message === 'string') {
+          errorMessage = errorData.message;
+        } else if (errorData.errors) {
+          const firstKey = Object.keys(errorData.errors)[0];
+          if (firstKey && errorData.errors[firstKey].length > 0) {
+            errorMessage = errorData.errors[firstKey][0];
+          }
+        } else {
+          const errorText = await response.text();
+          if (errorText) errorMessage = errorText;
+        }
       }
     } catch {
-      //
+      // Ignora
     }
 
     throw new ApiError(errorMessage);

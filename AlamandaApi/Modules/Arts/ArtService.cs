@@ -44,7 +44,7 @@ namespace AlamandaApi.Services.Art {
     public async Task<PagedResult<ArtModel>> GetAll(ListQueryParams query) {
       return await _crudService.GetPagedAsync(new ListOptions<ArtModel, ArtModel> {
         QueryParams = query,
-        AllowedSortColumns = new HashSet<string> { "Id", "Social" },
+        AllowedSortColumns = new HashSet<string> { "Social" },
         Selector = u => new ArtModel {
           Id = u.Id,
           Social = u.Social,

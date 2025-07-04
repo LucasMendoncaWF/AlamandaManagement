@@ -17,10 +17,21 @@ namespace AlamandaApi.Services.User {
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> AdminUpdate([FromBody] UserEdit user) {
+    public async Task<IActionResult> AdminUpdateUser([FromBody] UserEdit user) {
       try {
-        var existingUser = await _userService.GetById(user.Id);
-        var result = await _userService.AdminUpdate(user);
+        var result = await _userService.AdminUpdateUser(user);
+        return Ok(new { result });
+      }
+      catch (Exception ex) {
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
+      }
+    }
+
+    [HttpPost("")]
+    [Authorize(Policy = "AdminOnly")]
+    public async Task<IActionResult> AdminCreateUser([FromBody] UserCreate user) {
+      try {
+        var result = await _userService.AdminCreateUser(user);
         return Ok(new { result });
       }
       catch (Exception ex) {

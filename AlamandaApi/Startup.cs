@@ -8,6 +8,8 @@ using AlamandaApi.Services.FieldsSchema;
 using AlamandaApi.Services.Art;
 using AlamandaApi.Services.CRUD;
 using Microsoft.EntityFrameworkCore;
+using AlamandaApi.Services.Role;
+using AlamandaApi.Services.Comics;
 
 namespace AlamandaApi {
   public class Startup {
@@ -18,20 +20,21 @@ namespace AlamandaApi {
     }
 
     public void ConfigureServices(IServiceCollection services) {
-      var dbHost = Environment.GetEnvironmentVariable("MYSQL_HOST");
-      var dbUser = Environment.GetEnvironmentVariable("MYSQL_USER");
-      var dbPassword = Environment.GetEnvironmentVariable("MYSQL_PASSWORD");
-      var dbName = Environment.GetEnvironmentVariable("MYSQL_DATABASE");
+      var dbHost = Environment.GetEnvironmentVariable("PG_HOST");
+      var dbPort = Environment.GetEnvironmentVariable("PG_PORT");
+      var dbUser = Environment.GetEnvironmentVariable("PG_USER");
+      var dbPassword = Environment.GetEnvironmentVariable("PG_PASSWORD");
+      var dbName = Environment.GetEnvironmentVariable("PG_DATABASE");
 
-      var connectionString = $"server={dbHost};user={dbUser};password={dbPassword};database={dbName}";
+      var connectionString = $"server={dbHost};Port={dbPort};Username={dbUser};password={dbPassword};database={dbName}";
       services.AddMemoryCache();
-      services.AddDbContext<AppDbContext>(options =>
-        options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
-
+      services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
       services.AddScoped(typeof(CRUDService<>));
       services.AddScoped<AuthService>();
       services.AddScoped<UserService>();
+      services.AddScoped<ComicsService>();
       services.AddScoped<TeamService>();
+      services.AddScoped<RoleService>();
       services.AddScoped<ArtService>();
       services.AddScoped<FieldsSchemaService>();
 

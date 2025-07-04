@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+using AlamandaApi.Services.Cart;
 
 namespace AlamandaApi.Services.User {
-  
+
   public class PermissionModel {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
@@ -11,12 +13,10 @@ namespace AlamandaApi.Services.User {
     public string Name { get; set; } = null!;
   }
 
-  public class UserEdit {
-    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
-
+  public class UserCreate {
     [Required, StringLength(50)]
-    public string Username { get; set; } = string.Empty;
+    [JsonPropertyName("username")]
+    public string UserName { get; set; } = string.Empty;
 
     [Required, EmailAddress, StringLength(50)]
     public string Email { get; set; } = string.Empty;
@@ -27,11 +27,18 @@ namespace AlamandaApi.Services.User {
     public PermissionModel? Permission { get; set; }
   }
 
+  public class UserEdit : UserCreate {
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+
+  }
+
   public class UserModel : UserEdit {
     [Required, StringLength(100, MinimumLength = 6), DataType(DataType.Password)]
     public string Password { get; set; } = string.Empty;
 
     public ICollection<RefreshTokenModel> RefreshTokens { get; set; } = new List<RefreshTokenModel>();
+    public CartModel Cart { get; set; } = new CartModel();
   }
 
   public class RefreshTokenModel {
@@ -61,10 +68,19 @@ namespace AlamandaApi.Services.User {
 
   public class RegisterRequest : LoginRequest {
     [Required, StringLength(50)]
-    public string Username { get; set; } = string.Empty;
+    public string UserName { get; set; } = string.Empty;
   }
 
   public class RefreshTokenRequest {
     public string RefreshToken { get; set; } = string.Empty;
+  }
+  
+  public class UserListDto {
+    public int Id { get; set; }
+    public string UserName { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string? Picture { get; set; }
+    public int? PermissionId { get; set; }
+    public PermissionModel? Permission { get; set; }
   }
 }

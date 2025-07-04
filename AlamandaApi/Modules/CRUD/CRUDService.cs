@@ -1,6 +1,7 @@
 using AlamandaApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Npgsql;
 using System.Collections.Concurrent;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -28,7 +29,13 @@ namespace AlamandaApi.Services.CRUD {
       var dbSet = _context.Set<T>().AsNoTracking();
       int pageSize = options.QueryParams.PageSize ?? 10;
       int page = options.QueryParams.Page ?? 1;
-      string sortBy = options.AllowedSortColumns.Contains(options.QueryParams.SortBy ?? "") ? options.QueryParams.SortBy! : "Id";
+      string? requestedSortBy = options.QueryParams.SortBy;
+      string sortBy = options.AllowedSortColumns
+          .FirstOrDefault(c => string.Equals(c, requestedSortBy, StringComparison.OrdinalIgnoreCase))
+          ?? "Id";
+      var propertyName = typeof(T).GetProperties()
+        .FirstOrDefault(p => string.Equals(p.Name, sortBy, StringComparison.OrdinalIgnoreCase))
+        ?.Name ?? "Id";
       bool descending = options.QueryParams.SortDirection == "descending";
       string query = options.QueryParams.QueryString?.Trim() ?? "";
       var filter = CRUDServiceHelper.BuildStringContainsFilter<T>(query, options.AllowedSortColumns);
@@ -38,15 +45,13 @@ namespace AlamandaApi.Services.CRUD {
         return cached!;
 
       IQueryable<T> filtered = !string.IsNullOrEmpty(query) && filter != null ? dbSet.Where(filter) : dbSet;
+      var lambda = GetOrderByExpression<T>(propertyName);
 
-      var param = Expression.Parameter(typeof(T), "x");
-      var property = Expression.Property(param, sortBy);
-      var lambda = Expression.Lambda(property, param);
       filtered = filtered.Provider.CreateQuery<T>(
         Expression.Call(
           typeof(Queryable),
           descending ? "OrderByDescending" : "OrderBy",
-          [ typeof(T), property.Type ],
+          [ typeof(T), lambda.Body.Type ],
           filtered.Expression,
           Expression.Quote(lambda)
         )
@@ -64,6 +69,13 @@ namespace AlamandaApi.Services.CRUD {
 
       SetCache(cacheKey, result);
       return result;
+    }
+
+    private static LambdaExpression GetOrderByExpression<E>(string propertyName) {
+      var param = Expression.Parameter(typeof(E), "x");
+      var property = Expression.Property(param, propertyName);
+      var delegateType = typeof(Func<,>).MakeGenericType(typeof(E), property.Type);
+      return Expression.Lambda(delegateType, property, param);
     }
 
     public async Task<T?> GetByPropertyAsync(string propName, object value) {
@@ -100,7 +112,11 @@ namespace AlamandaApi.Services.CRUD {
       }
 
       _context.Set<T>().Add(newEntity);
-      await _context.SaveChangesAsync();
+      try {
+        await _context.SaveChangesAsync();
+      } catch (DbUpdateException dbEx) when (dbEx.InnerException != null) {
+        ErrorHandler.GetFriendlyError(dbEx.InnerException as PostgresException);
+      }
       ClearCache();
       return newEntity;
     }
@@ -131,7 +147,11 @@ namespace AlamandaApi.Services.CRUD {
       }
 
       _context.Update(existing);
-      await _context.SaveChangesAsync();
+      try {
+        await _context.SaveChangesAsync();
+      } catch (DbUpdateException dbEx) when (dbEx.InnerException != null) {
+        ErrorHandler.GetFriendlyError(dbEx.InnerException as PostgresException);
+      }
       ClearCache();
       return existing;
     }
@@ -157,31 +177,34 @@ namespace AlamandaApi.Services.CRUD {
     }
 
     public async Task SyncManyToManyRelation<TJoin, TKey>(
-      ICollection<TJoin> currentCollection,
-      IEnumerable<string> newIds,
-      IQueryable<TJoin> dbSet,
-      Expression<Func<TJoin, TKey>> idSelectorExpr
+        ICollection<TJoin> currentCollection,
+        IEnumerable<TKey> newIds,
+        IQueryable<TJoin> dbSet,
+        Expression<Func<TJoin, TKey>> idSelectorExpr
     ) where TJoin : class {
       var idSelectorCompiled = idSelectorExpr.Compile();
-      var converter = System.ComponentModel.TypeDescriptor.GetConverter(typeof(TKey));
-      var newIdsConverted = newIds.Select(id => (TKey)converter.ConvertFromString(id)!).ToHashSet();
-      var currentIdsConverted = currentCollection.Select(idSelectorCompiled).ToHashSet();
+      var newIdsSet = new HashSet<TKey>(newIds);
+      var currentIdsSet = new HashSet<TKey>(currentCollection.Select(idSelectorCompiled));
 
-      if (newIdsConverted.SetEquals(currentIdsConverted)) return;
+      if (newIdsSet.SetEquals(currentIdsSet)) return;
 
-      var relevantIds = newIdsConverted.Union(currentIdsConverted).ToList();
-
+      var relevantIds = newIdsSet.Union(currentIdsSet).ToHashSet();
       var param = Expression.Parameter(typeof(TJoin), "x");
-      var prop = (idSelectorExpr.Body as MemberExpression)?.Member as PropertyInfo ?? throw new Exception("Invalid expression");
-      var propAccess = Expression.Property(param, prop.Name);
-      var containsMethod = typeof(List<TKey>).GetMethod("Contains", new[] { typeof(TKey) })!;
-      var body = Expression.Call(Expression.Constant(relevantIds), containsMethod, propAccess);
+      var idMember = (idSelectorExpr.Body as MemberExpression) ?? throw new Exception("Invalid id selector expression");
+      var replacedProperty = Expression.Property(param, idMember.Member.Name);
+      var containsMethod = typeof(HashSet<TKey>).GetMethod(nameof(HashSet<TKey>.Contains), new[] { typeof(TKey) })!;
+      var relevantIdsConst = Expression.Constant(relevantIds);
+      var body = Expression.Call(relevantIdsConst, containsMethod, replacedProperty);
       var lambda = Expression.Lambda<Func<TJoin, bool>>(body, param);
-
       var allPossibleItems = await dbSet.Where(lambda).ToListAsync();
 
-      var toAdd = allPossibleItems.Where(item => newIdsConverted.Contains(idSelectorCompiled(item)) && !currentIdsConverted.Contains(idSelectorCompiled(item))).ToList();
-      var toRemove = currentCollection.Where(item => !newIdsConverted.Contains(idSelectorCompiled(item))).ToList();
+      var toAdd = allPossibleItems
+        .Where(item => newIdsSet.Contains(idSelectorCompiled(item)) && !currentIdsSet.Contains(idSelectorCompiled(item)))
+        .ToList();
+
+      var toRemove = currentCollection
+        .Where(item => !newIdsSet.Contains(idSelectorCompiled(item)))
+        .ToList();
 
       foreach (var item in toRemove)
         currentCollection.Remove(item);
@@ -219,9 +242,9 @@ namespace AlamandaApi.Services.CRUD {
       var param = Expression.Parameter(typeof(T), "x");
       Expression? combined = null;
       var efFunctionsProperty = Expression.Property(null, typeof(EF).GetProperty(nameof(EF.Functions))!);
-      var likeMethod = typeof(DbFunctionsExtensions).GetMethod(
-        nameof(DbFunctionsExtensions.Like),
-        [ typeof(DbFunctions), typeof(string), typeof(string) ]
+      var likeMethod = typeof(NpgsqlDbFunctionsExtensions).GetMethod(
+          nameof(NpgsqlDbFunctionsExtensions.ILike),
+          [ typeof(DbFunctions), typeof(string), typeof(string) ]
       )!;
 
       var patternConstant = Expression.Constant($"%{query}%");

@@ -13,6 +13,7 @@
     font-weight: bold;
     letter-spacing: 1.5px;
     color: $white;
+    text-align: left;
 
     &.sortable {
       cursor: pointer;
@@ -20,6 +21,10 @@
       &:hover {
         opacity: 0.6;
       }
+    }
+    .sort-icon {
+      width: 12px;
+      margin-left: 5px;
     }
 
     .direction {
@@ -29,6 +34,9 @@
 
       &--down{
         color: blue;
+        .sort-icon {
+          transform: rotate(180deg);
+        }
       }
     }
   }
@@ -45,21 +53,26 @@
       class="sortable"
       v-for="key in restFields"
       :key="key"
+      role="button"
+       @click="() => sortHeader(key)"
     >
-      <span role="button" @click="() => sortHeader(key)">{{ key }}</span>
-      <span v-if="sortBy === key" :class="`direction--${sortDirection === 'ascending' ? 'up' : 'down'}`">x</span>
+      <span>{{ key }}</span>
+      <span v-if="sortBy === key" :class="`direction--${sortDirection === 'ascending' ? 'down' : 'up'}`">
+        <img class="sort-icon" :src="sortIcon" :alt="`sort by${key}`" />
+      </span>
     </th>
   </thead>
 </template>
 
 <script lang="ts" setup>
   import { computed } from 'vue';
+  const sortIcon = new URL('@/assets/icons/icon_sort.svg', import.meta.url).href;
   import { ApiResponseData, ResponseKeyType, SortDirection } from '@/api/defaultApi';
 
   interface Props<T = ApiResponseData> {
-    item: T;
+    item?: T;
     sortHeader: (name: string) => void;
-    sortBy: string;
+    sortBy: string | null;
     sortDirection: SortDirection;
   }
 
@@ -69,11 +82,11 @@
     typeof value === 'string' && /\.(jpg|jpeg|png|webp|gif|bmp)$/i.test(value);
 
   const imageField = computed(() => {
-    return Object.keys(props.item).find((key) => isImageUrl(props.item[key]) || key.toLowerCase() === 'picture');
+    return props.item && Object.keys(props.item).find((key) => props.item && isImageUrl(props.item[key]) || key.toLowerCase() === 'picture');
   });
 
   const restFields = computed(() => {
-    return Object.keys(props.item)
+    return props.item && Object.keys(props.item)
       .filter((key) => !key.toLowerCase().includes('id') && key !== imageField.value);
   });
 </script>

@@ -51,7 +51,7 @@
     <img :src="editIcon" alt="edit" />
   </button></td>
 
-  <td class="image-td">
+  <td class="image-td" v-if="imageField">
     <img 
       v-if="imageField && item[imageField]"
       :src="imageField ? getImage(imageUrl) : ''"

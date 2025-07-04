@@ -43,30 +43,29 @@
 <template>
   <div class="list">
     <ListSearch :onClickCreate="onOpenForm" :onSearch="onSearch" :title="title" />
-    <div v-if="deleteId">
-      DELETE COMPONENT MODAL TODO
-    </div>
+    <DeleteModal v-if="deleteId" :refetch="refetch" :onCancel="onCancelDelete" :deleteFunction="deleteFunction" :id="deleteId">
+      {{ getConfirmDeleteMessage() }}
+    </DeleteModal>
     <ListForm 
       v-if="isFormOpen && !deleteId"
       :onCancel="onCancelEdit"
       :onDelete="onClickDelete"
-      :addItem="addItemFunction"
-      :updateItem="updateItemFunction"
+      :addItemFunction="addItemFunction"
+      :updateItemFunction="updateItemFunction"
       :onComplete="onCompleteUpdating"
       :isFieldsError="isFieldsError"
       :isFieldsPending="isFieldsPending"
       :isFormOpen="isFormOpen"
-      :fields="fields" 
+      :fields="[...fields]?.sort((a, b) => a.dataType - b.dataType)" 
       :maxImageSize="maxImageSize"
       :data="data?.items.find(item => editId === item.id)"
     />
-    <div class="list-scroll" v-if="!isError && !(data && !data.items.length)">
+    <div class="list-scroll">
       <table class="list-table">
-        <ListHeader :sortBy="sortBy" :sortDirection="sortDirection" :sortHeader="onClickHeader" v-if="data && data.items.length" :item="data.items[0]" />
+        <ListHeader :sortBy="sortBy" :sortDirection="sortDirection" :sortHeader="onClickHeader" :item="data?.items[0]" />
         <tbody >
           <tr
-            v-if="data && data.items.length" 
-            v-for="item of data.items" 
+            v-for="item of data?.items" 
             class="list-item"
           >
             <ListItem
@@ -80,11 +79,11 @@
     </div>
     <div v-if="isError || (data && !data.items.length)" class="state-ui">
       <div class="empty-area" v-if="data && !data.items.length">
-        <div>{{ emptyMessage }}</div>
+        <div>{{ getEmptyMessage() }}</div>
         <img :src="emptyImg" alt="empty result" />
       </div>
       <div v-if="isError">
-        {{ errorMessage }}
+        {{ getErrorMessage() }}
       </div>
     </div>
     <Loader v-if="isPending" isGlobal/>
@@ -92,114 +91,161 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-  const emptyImg = new URL('@/assets/images/empty.webp', import.meta.url).href;
+<script lang="ts" setup generic="TRes extends ApiResponseData, TForm">
+  import { computed, ref, watch } from 'vue';
+  import { useQuery } from '@tanstack/vue-query';
+
   import ListPagination from './listPagination.vue';
   import ListSearch from './listSearch.vue';
-  import { computed, ref } from 'vue';
-  import queryKeys from '@/api/queryKeys';
-  import { useQuery } from '@tanstack/vue-query';
-  import { ListResponse, ApiResponseData, QueryParams, SortDirection } from '@/api/defaultApi';
   import ListItem from './listItem.vue';
-  import Loader from '../loader.vue';
   import ListHeader from './listHeader.vue';
   import ListForm from './listForm.vue';
+  import DeleteModal from './deleteModal.vue';
+  import Loader from '../loader.vue';
+
+  import queryKeys from '@/api/queryKeys';
+  import { ApiResponseData, ListResponse, QueryParams, SortDirection } from '@/api/defaultApi';
   import { FormFieldModel } from '@/models/formFieldModel';
 
-  interface Props<T extends ApiResponseData = ApiResponseData> {
+  const emptyImg = new URL('@/assets/images/empty.webp', import.meta.url).href;
+
+  interface Props {
     title: string;
-    emptyMessage: string;
-    errorMessage: string;
-    maxImageSize: number;
-    searchFunction: (params: QueryParams) => ListResponse<T>;
-    addItemFunction: (data: Object) => void;
-    getFieldFunction: () => FormFieldModel[];
-    updateItemFunction: (data: Object) => void;
-    deleteFunction: (id: number) => void;
+    maxImageSize?: number;
+    label: string;
+    searchFunction: (params: QueryParams) => Promise<ListResponse<TRes>>;
+    addItemFunction: (data: TForm) => Promise<TRes>;
+    updateItemFunction: (data: TForm) => Promise<TRes>;
+    getFieldFunction: () => Promise<FormFieldModel[]>;
+    deleteFunction: (id: number) => Promise<void>;
   }
 
   const props = defineProps<Props>();
+
   const currentPage = ref(1);
   const isFormOpen = ref(false);
-  const sortBy = ref('');
-  const sortDirection = ref<SortDirection>('descending');
+  const sortBy = ref<null | string>(null);
+  const sortDirection = ref<SortDirection>('ascending');
   const queryString = ref('');
   const editId = ref<number | null>(null);
   const deleteId = ref<number | null>(null);
 
+  const queryParams = ref({
+    queryString: queryString.value,
+    sortBy: sortBy.value,
+    sortDirection: sortDirection.value,
+    page: currentPage.value,
+  });
+
   const onSearch = (value: string) => {
     queryString.value = value;
-  }
+  };
 
   const onClickEdit = (id?: number) => {
-    if(!id) { return }
+    if (!id) return;
     editId.value = id;
     deleteId.value = null;
     onOpenForm();
-  }
+  };
 
   const onOpenForm = () => {
     isFormOpen.value = true;
-  }
+  };
 
   const onClickDelete = (id?: number) => {
-    if(!id) { return }
+    if (!id) return;
     deleteId.value = id;
-  }
+  };
 
-  const confirmDelete = async () => {
-    if(deleteId.value) {
-      await props.deleteFunction(deleteId.value);
-      await refetch();
-    }
-  }
+  const onCancelDelete = () => {
+    deleteId.value = null;
+    editId.value = null;
+    isFormOpen.value = false;
+  };
 
   const onCancelEdit = () => {
     editId.value = null;
     isFormOpen.value = false;
-  }
+  };
 
   const onChangePage = (page: number) => {
     currentPage.value = page;
-  }
+  };
 
   const onCompleteUpdating = () => {
     refetch();
     onCancelEdit();
-  }
+  };
+
+  const debouncedQueryParams = ref({ ...queryParams.value });
 
   const onClickHeader = (name: string) => {
-    if(sortBy.value === name) {
-      if(sortDirection.value === 'ascending') {
-        sortDirection.value = 'descending';
-        sortBy.value = '';
+    if (sortBy.value === name) {
+      if (sortDirection.value === 'descending') {
+        sortDirection.value = 'ascending';
+        sortBy.value = null;
         return;
       }
-      sortDirection.value = 'ascending';
+      sortDirection.value = 'descending';
       return;
     }
 
     sortBy.value = name;
-  }
+  };
 
   const listQueryKey = computed(() => [
     queryKeys.List,
-    { title: props.title, queryString: queryString.value, sortBy: sortBy.value, sortDirection: sortDirection.value, page: currentPage.value }
+    { title: props.title, ...debouncedQueryParams.value },
   ]);
 
   const { isPending, isError, data, refetch } = useQuery({
     queryKey: [listQueryKey],
-    async queryFn() {
-      return await props.searchFunction({queryString: queryString.value, sortBy: sortBy.value, sortDirection: sortDirection.value, page: currentPage.value});
-    },
-    
+    queryFn: async () => await props.searchFunction(debouncedQueryParams.value),
   });
 
-    const { isPending: isFieldsPending, isError: isFieldsError, data: fields } = useQuery({
-    queryKey: [queryKeys.Fields, {title: props.title}],
-    async queryFn() {
-      return await props.getFieldFunction();
-    },
+  const {
+    isPending: isFieldsPending,
+    isError: isFieldsError,
+    data: fields,
+  } = useQuery({
+    queryKey: [queryKeys.Fields, { title: props.title }],
+    queryFn: async () => await props.getFieldFunction(),
     gcTime: 1000 * 60 * 10,
+  });
+
+  const getErrorMessage = () => {
+    return `No ${props.label}s were found with this search`;
+  };
+
+  const getEmptyMessage = () => {
+    return `An error occurred while searching for ${props.label}s`;
+  };
+
+  const getConfirmDeleteMessage = () => {
+    return `Are you sure you want to delete this ${props.label}?`;
+  };
+
+  watch(
+    queryParams,
+    (newVal) => {
+      const timeout = setTimeout(() => {
+        debouncedQueryParams.value = { ...newVal };
+      }, 300);
+      return () => clearTimeout(timeout);
+    },
+    { deep: true }
+  );
+
+  watch([queryString, sortBy, sortDirection, currentPage], () => {
+    queryParams.value = {
+      queryString: queryString.value,
+      sortBy: sortBy.value,
+      sortDirection: sortBy.value ? sortDirection.value : 'descending',
+      page: currentPage.value,
+    };
+  });
+
+  watch([queryString, sortBy], () => {
+    if (currentPage.value !== 1) currentPage.value = 1;
   });
 </script>
