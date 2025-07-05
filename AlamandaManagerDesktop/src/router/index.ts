@@ -34,7 +34,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.comics,
     name: 'comics',
-    component: () => import('@/sections/comicsPage.vue'),
+    component: () => import('@/sections/comics/comicsPage.vue'),
+  },
+  {
+    path: urls.categories,
+    name: 'categories',
+    component: () => import('@/sections/categoriesPage.vue'),
   },
 ];
 

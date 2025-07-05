@@ -32,7 +32,7 @@
 
 <template>
   <div :class="`form-select form-select--${variant}`">
-    <label :for="id">{{ label.replace('id', '') }}</label>
+    <label :for="id">{{ convertFieldNameToLabel(label) }}</label>
     <select
       :id="id"
       v-bind="attrs"
@@ -49,6 +49,7 @@
 
 <script lang="ts" setup>
   import { FormFieldOptionModel } from '@/models/formFieldModel';
+import { convertFieldNameToLabel } from '@/utis/converter';
 import { useAttrs } from 'vue';
 
   interface Props {

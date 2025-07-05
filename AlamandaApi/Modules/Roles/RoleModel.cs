@@ -11,6 +11,7 @@ namespace AlamandaApi.Services.Role {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public string Name { get; set; } = null!;
+    public string? Name_En { get; set; } = null!;
   }
 
   public class RoleModelDto {
@@ -18,5 +19,6 @@ namespace AlamandaApi.Services.Role {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public string Name { get; set; } = null!;
+    public string Name_En { get; set; } = null!;
   }
 }

@@ -6,7 +6,7 @@ public static class ErrorHandler {
     if (pgEx != null && pgEx.SqlState == "23505") {
       errorMsg = GetFriendlyUniqueErrorMessage(pgEx.MessageText);
     }
-    throw new Exception(errorMsg);
+    throw new Exception(pgEx?.MessageText);
   }
 
   public static string GetFriendlyUniqueErrorMessage(string pgErrorMsg) {

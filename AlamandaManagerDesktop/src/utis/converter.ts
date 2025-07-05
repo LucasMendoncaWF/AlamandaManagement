@@ -11,3 +11,7 @@ export function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+export function convertFieldNameToLabel(value: string) {
+  return value.toLowerCase().replace('_', ' ').replace('id', '');
+}

@@ -101,10 +101,9 @@ namespace AlamandaApi.Services.FieldsSchema {
 
           var inferredType = InferType(name.ToLower(), sqlType, columnType, isForeignKey, isJunction);
 
-          var lowerName = name.ToLower();
-          if (lowerName != "id" && (excludedFields == null || !excludedFields.Contains(lowerName))) {
+          if (name != "Id" && (excludedFields == null || !excludedFields.Contains(name))) {
             fields.Add(new FieldInfo {
-              FieldName = lowerName,
+              FieldName = toFirstLowerCase(name),
               DataType = inferredType,
               FieldMaxSize = maxLength,
               OptionsArray = null,
@@ -113,7 +112,7 @@ namespace AlamandaApi.Services.FieldsSchema {
           }
 
           if ((inferredType == FieldDataType.Options || inferredType == FieldDataType.OptionsArray) && fkTable != null)
-            foreignKeys[lowerName] = fkTable;
+            foreignKeys[toFirstLowerCase(name)] = fkTable;
         }
         reader.Close();
       }
@@ -141,7 +140,7 @@ namespace AlamandaApi.Services.FieldsSchema {
         while (await reader2.ReadAsync()) {
           var otherTable = reader2.GetString(1);
           fields.Add(new FieldInfo {
-            FieldName = otherTable.ToLower(),
+            FieldName = toFirstLowerCase(otherTable),
             DataType = FieldDataType.OptionsArray,
             OptionsArray = await GetOptions(otherTable),
             IsRequired = false
@@ -150,6 +149,13 @@ namespace AlamandaApi.Services.FieldsSchema {
       }
 
       return fields;
+    }
+
+    private string toFirstLowerCase(string value) {
+      if (string.IsNullOrEmpty(value) || char.IsLower(value[0]))
+          return value;
+
+      return char.ToLower(value[0]) + value.Substring(1);
     }
 
     private static FieldDataType InferType(string name, string sqlType, string columnType, bool isForeignKey, bool isJunction) {

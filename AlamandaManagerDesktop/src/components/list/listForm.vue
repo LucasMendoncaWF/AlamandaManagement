@@ -145,7 +145,7 @@
   import Loader from '@/components/loader.vue'
   import FormButton from '@/components/forms/formButton.vue'
   import { fileToBase64 } from '@/utis/converter'
-  import { ApiResponseData, getErrorMessage, HasId, ResponseKeyType } from '@/api/defaultApi'
+  import { ApiResponseData, getErrorMessage, ResponseKeyType } from '@/api/defaultApi'
   import { FormFieldModel, FieldDataTypeEnum } from '@/models/formFieldModel'
   import FormMultipleSelect from '../forms/formMultipleSelect.vue'
   import FormSelect from '../forms/formSelect.vue'

@@ -63,6 +63,11 @@ import urls from '@/router/urls';
       image: new URL('@/assets/icons/icon_library.svg', import.meta.url).href
     },
     {
+      label: 'Genre',
+      url: urls.categories,
+      image: new URL('@/assets/icons/icon_category.svg', import.meta.url).href
+    },
+    {
       label: 'Users',
       url: urls.users,
       image: new URL('@/assets/icons/icon_users.svg', import.meta.url).href

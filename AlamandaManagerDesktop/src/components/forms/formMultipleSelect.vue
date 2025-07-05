@@ -98,7 +98,7 @@
 
 <template>
   <div v-on:mouseleave="onFocusOut" :class="`form-multi-input form-multi-input--${variant}`">
-    <label>{{ label }}</label>
+    <label>{{ convertFieldNameToLabel(label) }}</label>
 
     <div class="input-box" @click="focusInput">
       <span
@@ -137,6 +137,7 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
 import { FormFieldOptionModel } from '@/models/formFieldModel';
+import { convertFieldNameToLabel } from '@/utis/converter';
 
 interface Props {
   modelValue?: string[];

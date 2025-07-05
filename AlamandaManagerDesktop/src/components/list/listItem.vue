@@ -46,10 +46,16 @@
 </style>
 
 <template>
-  
-  <td class="button-td"><button @click="onClickEdit">
-    <img :src="editIcon" alt="edit" />
-  </button></td>
+  <td class="button-td" v-if="onClickItem">
+    <button @click="onClickCurrentItem">
+      <img :src="chaptersIcon" alt="edit" />
+    </button>
+  </td>
+  <td class="button-td">
+    <button @click="onClickEdit">
+      <img :src="editIcon" alt="edit" />
+    </button>
+  </td>
 
   <td class="image-td" v-if="imageField">
     <img 
@@ -75,6 +81,7 @@
 <script lang="ts" setup>
   import { computed, ref, watch } from 'vue';
   const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
+  const chaptersIcon = new URL('@/assets/icons/icon_chapters.svg', import.meta.url).href;
   const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
   import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
   import { FormFieldOptionModel } from '@/models/formFieldModel';
@@ -87,10 +94,18 @@
   interface Props<T = ApiResponseData> {
     item: T;
     onClickEdit: () => void;
+    onClickItem?: (id: number) => void;
   }
 
   const props = defineProps<Props>();
   const imageUrl = ref(props.item.picture || '');
+
+  const onClickCurrentItem = () => {
+    console.log(props.item)
+    if(props.onClickItem && props.item?.id) {
+      props.onClickItem(props.item.id);
+    }
+  }
 
   const onImageError = () => {
     imageUrl.value = placeholder;

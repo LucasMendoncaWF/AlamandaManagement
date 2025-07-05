@@ -69,7 +69,7 @@ namespace AlamandaApi.Services.Role {
     public async Task<IActionResult> getFields() {
       try {
         var result = await _fieldSchemaService.GetFieldTypes("Roles");
-        result.RemoveAll(item => item.FieldName == "teammembers");
+        result.RemoveAll(item => item.FieldName.ToLower() == "teammembers");
         return Ok(result);
       }
       catch {

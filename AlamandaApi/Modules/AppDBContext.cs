@@ -50,6 +50,15 @@ namespace AlamandaApi.Data {
           j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
         );
 
+      modelBuilder.Entity<ComicModel>()
+        .HasMany(tm => tm.Categories)
+        .WithMany(r => r.Comics)
+        .UsingEntity<Dictionary<string, object>>(
+          "ComicCategory",
+          j => j.HasOne<CategoryModel>().WithMany().HasForeignKey("CategoryId"),
+          j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId")
+        );
+
       modelBuilder.Entity<UserModel>()
         .HasOne(tm => tm.Permission)
         .WithMany()

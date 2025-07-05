@@ -29,7 +29,7 @@ namespace AlamandaApi.Services.Comics {
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update([FromBody] ComicModel comic) {
+    public async Task<IActionResult> Update([FromBody] ComicEditModel comic) {
       try {
         var result = await _comicsService.Update(comic);
         return Ok(new { result });

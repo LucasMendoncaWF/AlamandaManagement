@@ -1,6 +1,6 @@
 <template>
   <List
-    v-if="tab === 'comics'"
+    v-if="currentComicSelected === null"
     title="Comics"
     label="comic"
     :maxImageSize="2000"
@@ -9,6 +9,7 @@
     :addItemFunction="addComic"
     :updateItemFunction="updateComic"
     :deleteFunction="deleteComic"
+    :onClickItem="onClickChapter"
   />
 </template>
 
@@ -17,5 +18,9 @@
   import List from '@/components/list/list.vue';
   import { getComics, getComicsFields, addComic, updateComic, deleteComic} from '@/api/comics';
 
-  const tab = ref('comics');
+  const currentComicSelected = ref<number | null>(null)
+  const onClickChapter = (id: number) => {
+    console.log('test')
+    currentComicSelected.value = id;
+  }
 </script>

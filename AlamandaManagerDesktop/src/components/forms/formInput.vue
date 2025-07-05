@@ -31,7 +31,7 @@
 
 <template>
   <div :class="`form-input form-input--${variant}`">
-    <label :for="id">{{ label }}</label>
+    <label :for="id">{{ convertFieldNameToLabel(label) }}</label>
     <input
       :id="id"
       v-bind="attrs"
@@ -43,7 +43,8 @@
 </template>
 
 <script lang="ts" setup>
-  import { useAttrs } from 'vue';
+  import { convertFieldNameToLabel } from '@/utis/converter';
+import { useAttrs } from 'vue';
 
   interface Props {
     modelValue?: string;

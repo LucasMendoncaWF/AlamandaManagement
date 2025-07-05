@@ -12,7 +12,7 @@ namespace AlamandaApi.Services.Role {
     public async Task<RoleModel> Create(RoleCreationModel role) {
       var result = await _crudService.CreateEntityAsync(
         new UpdateEntityOptions<RoleModel, RoleCreationModel> {
-          PropertiesToUpdate = ["Name"],
+          PropertiesToUpdate = ["Name", "Name_En"],
           UpdatedObject = role,
         }
       );
@@ -22,7 +22,7 @@ namespace AlamandaApi.Services.Role {
     public async Task<RoleModel> Update(RoleModel role) {
       var result = await _crudService.UpdateEntityAsync(
         new UpdateEntityOptions<RoleModel, RoleModel> {
-          PropertiesToUpdate = ["Name"],
+          PropertiesToUpdate = ["Name", "Name_En"],
           UpdatedObject = role,
         }
       );
@@ -36,10 +36,11 @@ namespace AlamandaApi.Services.Role {
     public async Task<PagedResult<RoleModelDto>> GetAll(ListQueryParams query) {
       return await _crudService.GetPagedAsync(new ListOptions<RoleModel, RoleModelDto> {
         QueryParams = query,
-        AllowedSortColumns = new HashSet<string> { "Name" },
+        AllowedSortColumns = new HashSet<string> { "Name", "Name_En" },
         Selector = u => new RoleModelDto {
           Id = u.Id,
           Name = u.Name,
+          Name_En = u.Name_En!
         }
       });
     }

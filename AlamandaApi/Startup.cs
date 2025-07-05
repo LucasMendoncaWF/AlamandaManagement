@@ -10,6 +10,7 @@ using AlamandaApi.Services.CRUD;
 using Microsoft.EntityFrameworkCore;
 using AlamandaApi.Services.Role;
 using AlamandaApi.Services.Comics;
+using AlamandaApi.Services.Category;
 
 namespace AlamandaApi {
   public class Startup {
@@ -33,6 +34,7 @@ namespace AlamandaApi {
       services.AddScoped<AuthService>();
       services.AddScoped<UserService>();
       services.AddScoped<ComicsService>();
+      services.AddScoped<CategoryService>();
       services.AddScoped<TeamService>();
       services.AddScoped<RoleService>();
       services.AddScoped<ArtService>();

@@ -8,7 +8,7 @@
   }
   th {
     padding: 8px 10px;
-    text-transform: uppercase;
+    text-transform: capitalize;
     font-size: 12px;
     font-weight: bold;
     letter-spacing: 1.5px;
@@ -45,6 +45,7 @@
 <template>
   <thead>
     <th></th>
+    <th v-if="hasClickItem"></th>
     <th v-if="imageField" class="image-td">
       {{ imageField }}
     </th>
@@ -56,7 +57,7 @@
       role="button"
        @click="() => sortHeader(key)"
     >
-      <span>{{ key }}</span>
+      <span>{{ key.replace('_', ' ') }}</span>
       <span v-if="sortBy === key" :class="`direction--${sortDirection === 'ascending' ? 'down' : 'up'}`">
         <img class="sort-icon" :src="sortIcon" :alt="`sort by${key}`" />
       </span>
@@ -74,6 +75,7 @@
     sortHeader: (name: string) => void;
     sortBy: string | null;
     sortDirection: SortDirection;
+    hasClickItem: boolean;
   }
 
   const props = defineProps<Props>();

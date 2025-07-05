@@ -2,9 +2,6 @@ import { FormFieldOptionModel } from "@/models/formFieldModel";
 
 const API_URL = import.meta.env.VITE_API_URL;
 type Method = 'POST' | 'GET' | 'PUT' | 'DELETE';
-export interface HasId {
-  id: number
-}
 
 export type ResponseKeyType = string | number | Date | string[] | FormFieldOptionModel[] | null | undefined;
 export type ResponseObjectKeysTypes = Record<string, ResponseKeyType>;

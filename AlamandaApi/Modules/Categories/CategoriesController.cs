@@ -3,23 +3,23 @@ using AlamandaApi.Services.FieldsSchema;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace AlamandaApi.Services.User {
+namespace AlamandaApi.Services.Category {
   [ApiController]
   [Route("[controller]")]
-  public class UserController : ControllerBase {
-    private readonly UserService _userService;
+  public class CategoryController : ControllerBase {
+    private readonly CategoryService _categoryService;
     private readonly FieldsSchemaService _fieldSchemaService;
 
-    public UserController(UserService userService, FieldsSchemaService fieldSchemaService) {
-      _userService = userService;
+    public CategoryController(CategoryService categoryService, FieldsSchemaService fieldSchemaService) {
+      _categoryService = categoryService;
       _fieldSchemaService = fieldSchemaService;
     }
 
-    [HttpPut("")]
+    [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> AdminUpdateUser([FromBody] UserEdit user) {
+    public async Task<IActionResult> Create([FromBody] CategoryCreationModel category) {
       try {
-        var result = await _userService.AdminUpdateUser(user);
+        var result = await _categoryService.Create(category);
         return Ok(new { result });
       }
       catch (Exception ex) {
@@ -27,11 +27,11 @@ namespace AlamandaApi.Services.User {
       }
     }
 
-    [HttpPost("")]
+    [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> AdminCreateUser([FromBody] UserCreate user) {
+    public async Task<IActionResult> Update([FromBody] CategoryModel category) {
       try {
-        var result = await _userService.AdminCreateUser(user);
+        var result = await _categoryService.Update(category);
         return Ok(new { result });
       }
       catch (Exception ex) {
@@ -41,10 +41,10 @@ namespace AlamandaApi.Services.User {
 
 
     [HttpGet("")]
-    [Authorize(Policy = "AdminOnly")]
+    [AllowAnonymous]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
-        var result = await _userService.GetAll(query);
+        var result = await _categoryService.GetAll(query);
         return Ok(result);
       }
       catch (Exception ex) {
@@ -56,7 +56,7 @@ namespace AlamandaApi.Services.User {
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {
-        await _userService.Delete(id);
+        await _categoryService.Delete(id);
         return Ok(new { success = true });
       }
       catch (Exception ex) {
@@ -68,7 +68,7 @@ namespace AlamandaApi.Services.User {
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> getFields() {
       try {
-        var result = await _fieldSchemaService.GetFieldTypes("Users", new List<string> { "Password", "RefreshToken" });
+        var result = await _fieldSchemaService.GetFieldTypes("Categories");
         return Ok(result);
       }
       catch {

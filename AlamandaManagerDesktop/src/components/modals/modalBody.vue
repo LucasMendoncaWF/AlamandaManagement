@@ -10,6 +10,8 @@
   top: 130px;
   box-shadow: -7px 11px $black;
   animation: FormAppear 0.3s;
+  max-height: 500px;
+  overflow: auto;
 
   @keyframes FormAppear {
     0% {

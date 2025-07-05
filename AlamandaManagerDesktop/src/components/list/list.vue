@@ -62,7 +62,7 @@
     />
     <div class="list-scroll">
       <table class="list-table">
-        <ListHeader :sortBy="sortBy" :sortDirection="sortDirection" :sortHeader="onClickHeader" :item="data?.items[0]" />
+        <ListHeader :hasClickItem="!!onClickItem" :sortBy="sortBy" :sortDirection="sortDirection" :sortHeader="onClickHeader" :item="data?.items[0]" />
         <tbody >
           <tr
             v-for="item of data?.items" 
@@ -72,6 +72,7 @@
               :key="item.id"
               :item="item"
               :onClickEdit="() => onClickEdit(item.id)"
+              :onClickItem="onClickItem"
             />
           </tr>
         </tbody>
@@ -118,6 +119,7 @@
     updateItemFunction: (data: TForm) => Promise<TRes>;
     getFieldFunction: () => Promise<FormFieldModel[]>;
     deleteFunction: (id: number) => Promise<void>;
+    onClickItem?: (id: number) => void;
   }
 
   const props = defineProps<Props>();
@@ -214,16 +216,20 @@
   });
 
   const getErrorMessage = () => {
-    return `No ${props.label}s were found with this search`;
+    return `An error occurred while searching for ${convertToPlural(props.label)}`;
   };
 
   const getEmptyMessage = () => {
-    return `An error occurred while searching for ${props.label}s`;
+    return `No ${convertToPlural(props.label)} were found with this search`;
   };
 
   const getConfirmDeleteMessage = () => {
     return `Are you sure you want to delete this ${props.label}?`;
   };
+
+  const convertToPlural = (value: string) => {
+    return value[value.length-1] === 'y' ? value.replace('y', 'ies') : value + sortBy;
+  }
 
   watch(
     queryParams,
