@@ -41,11 +41,11 @@ namespace AlamandaApi.Services.User {
       await _crudService.DeleteByIdAsync(Id);
     }
 
-    public async Task<PagedResult<UserListDto>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(new ListOptions<UserModel, UserListDto> {
+    public async Task<PagedResult<UserListView>> GetAll(ListQueryParams query) {
+      return await _crudService.GetPagedAsync(new ListOptions<UserModel, UserListView> {
         QueryParams = query,
         AllowedSortColumns = new HashSet<string> { "UserName", "Email", "PermissionId" },
-        Selector = u => new UserListDto {
+        Selector = u => new UserListView {
           Id = u.Id,
           UserName = u.UserName,
           Email = u.Email,

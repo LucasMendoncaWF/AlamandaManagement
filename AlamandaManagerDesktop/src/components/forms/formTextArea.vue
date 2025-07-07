@@ -1,19 +1,19 @@
 <style lang="scss" scoped>
   @use '@/assets/variables.scss' as *;
-  .form-select {
+  .form-input {
     color: $white;
     margin-top: 10px;
     text-transform: capitalize;
-    width: 100%;
 
-    select {
+    textarea {
       background-color: $white;
       padding: 10px;
       margin-top: 5px;
       font-size: 16px;
+      width: calc(100% - 24px);
       border: 0;
       border-radius: 5px;
-      width: 100%;
+      resize: vertical;
 
       &:focus {
         outline: 2px solid $secondary;
@@ -23,7 +23,7 @@
     &--inverted {
       color: $secondary;
 
-      select {
+      textarea {
         border: 2px solid $secondary;
       }
     }
@@ -31,33 +31,29 @@
 </style>
 
 <template>
-  <div :class="`form-select form-select--${variant}`">
+  <div :class="`form-input form-input--${variant}`">
     <label :for="id">{{ convertFieldNameToLabel(label) }}</label>
-    <select
+    <textarea
       :id="id"
       v-bind="attrs"
       @input="onInput"
       :value="modelValue?.toString()"
       :disabled="disabled"
-    >
-      <option v-for="option of options" :value="option.id.toString()">
-        {{ option.name }}
-      </option>
-    </select>
+      rows="4"
+    ></textarea>
   </div>
 </template>
 
 <script lang="ts" setup>
-  import { FieldType, FormFieldOptionModel } from '@/models/formFieldModel';
-import { convertFieldNameToLabel } from '@/utis/converter';
-import { useAttrs } from 'vue';
+  import { FieldType } from '@/models/formFieldModel';
+  import { convertFieldNameToLabel } from '@/utis/converter';
+  import { useAttrs } from 'vue';
 
   interface Props {
     modelValue?: FieldType;
     label: string;
     id: string;
     variant?: 'inverted';
-    options: FormFieldOptionModel[];
     disabled?: boolean;
   }
  

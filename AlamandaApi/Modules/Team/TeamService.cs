@@ -17,7 +17,7 @@ namespace AlamandaApi.Services.Team {
         new UpdateEntityOptions<TeamMemberModel, TeamMemberCreationModel> {
           UpdatedObject = member,
           Include = q => q.Include(m => m.Comics).Include(m => m.Roles),
-          PropertiesToUpdate = ["Social", "Name"],
+          PropertiesToUpdate = ["Social", "Name", "Official_Member"],
           CustomUpdate = async (existing, updated, tableName, _) => {
           var rolesIds = updated.RolesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
           var comicIds = updated.ComicsIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
@@ -46,7 +46,7 @@ namespace AlamandaApi.Services.Team {
         new UpdateEntityOptions<TeamMemberModel, TeamMemberEditModel> {
           UpdatedObject = member,
           Include = q => q.Include(m => m.Comics).Include(m => m.Roles),
-          PropertiesToUpdate = ["Social", "Name"],
+          PropertiesToUpdate = ["Social", "Name", "Official_Member"],
           CustomUpdate = async (existing, updated, tableName, context) => {
           var rolesIds = updated.RolesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
           var comicIds = updated.ComicsIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
@@ -74,22 +74,27 @@ namespace AlamandaApi.Services.Team {
       await _crudService.DeleteByIdAsync(Id);
     }
 
-    public async Task<PagedResult<TeamMemberModel>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(new ListOptions<TeamMemberModel, TeamMemberModel> {
+    public async Task<PagedResult<TeamMemberListModel>> GetAll(ListQueryParams query) {
+      return await _crudService.GetPagedAsync(new ListOptions<TeamMemberModel, TeamMemberListModel> {
         QueryParams = query,
         AllowedSortColumns = new HashSet<string> { "Social", "Name" },
-        Selector = u => new TeamMemberModel {
+        Selector = u => new TeamMemberListModel {
           Id = u.Id,
           Social = u.Social,
           Name = u.Name,
           Picture = u.Picture,
-          Comics = u.Comics.Select(c => new ComicModel {
+          Official_Member = u.Official_Member,
+          Comics = u.Comics.Select(c => new ComicListModel {
             Id = c.Id,
-            Name = c.Name
+            Name = c.Translations
+            .Where(t => t.LanguageId == 1)
+            .Select(t => t.Name)
+            .FirstOrDefault() ?? "",
+            Translations = c.Translations,
           }).ToList(),
-          Roles = u.Roles.Select(r => new RoleModel {
-            Id = r.Id,
-            Name = r.Name
+          Roles = u.Roles.Select(c => new RoleModel {
+            Id = c.Id,
+            Translations = c.Translations
           }).ToList(),
         }
       });

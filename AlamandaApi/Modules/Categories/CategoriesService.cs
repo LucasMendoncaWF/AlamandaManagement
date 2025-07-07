@@ -11,18 +11,12 @@ namespace AlamandaApi.Services.Category {
       _crudService = crudService;
     }
 
-    public async Task<CategoryModel> Create(CategoryFormDTO category) {
-      var result = await _crudService.CreateEntityAsync(new UpdateEntityOptions<CategoryModel, CategoryFormDTO> {
+    public async Task<CategoryModel> Create(CategoryModelView category) {
+      var result = await _crudService.CreateEntityAsync(new UpdateEntityOptions<CategoryModel, CategoryModelView> {
         UpdatedObject = category,
-        AfterAll = async (entity, dto, tableName, context) => {
+        AfterAll = async (entity, updated, tableName, context) => {
           context.Entry(entity).Collection(e => e.Translations).Load();
-          if (entity.Translations.Any()) {
-            context.RemoveRange(entity.Translations);
-            await context.SaveChangesAsync();
-          }
-
-          var translationsDict = dto.Translations ?? new List<CategoryTranslationModel>();
-
+          var translationsDict = updated.Translations ?? new List<CategoryTranslationModel>();
           foreach (var lang in translationsDict) {
             var langId = lang.LanguageId;
             var translation = new CategoryTranslationModel {
@@ -32,9 +26,7 @@ namespace AlamandaApi.Services.Category {
             };
             context.Set<CategoryTranslationModel>().Add(translation);
           }
-
           await context.SaveChangesAsync();
-
           return entity;
         },
       });
@@ -46,27 +38,26 @@ namespace AlamandaApi.Services.Category {
       var result = await _crudService.UpdateEntityAsync(
         new UpdateEntityOptions<CategoryModel, CategoryModel> {
           UpdatedObject = category,
-          CustomUpdate = async (entity, dto, tableName, context) => {
+          CustomUpdate = async (entity, updated, tableName, context) => {
             context.Entry(entity).Collection(e => e.Translations).Load();
-            if (entity.Translations.Any()) {
-              context.RemoveRange(entity.Translations);
-              await context.SaveChangesAsync();
+            var translationsDict = updated.Translations ?? new List<CategoryTranslationModel>();
+            foreach (var currTranslation in translationsDict) {
+              var langId = currTranslation.LanguageId;
+              var existingTranslation = entity.Translations
+                  .FirstOrDefault(t => t.LanguageId == langId);
+              if (existingTranslation != null) {
+                existingTranslation.Name = currTranslation.Name;
+              }
+              else {
+                var newTranslation = new CategoryTranslationModel {
+                  CategoryId = entity.Id,
+                  LanguageId = langId,
+                  Name = currTranslation.Name
+                };
+                context.Add(newTranslation);
+              }
             }
-
-            var translationsDict = dto.Translations ?? new List<CategoryTranslationModel>();
-
-            foreach (var lang in translationsDict) {
-              var langId = lang.LanguageId;
-              var translation = new CategoryTranslationModel {
-                CategoryId = entity.Id,
-                LanguageId = langId,
-                Name = lang.Name
-              };
-              context.Set<CategoryTranslationModel>().Add(translation);
-            }
-
             await context.SaveChangesAsync();
-
             return entity;
           },
         }
@@ -78,11 +69,11 @@ namespace AlamandaApi.Services.Category {
       await _crudService.DeleteByIdAsync(Id);
     }
 
-    public async Task<PagedResult<CategoryModelDTO>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(new ListOptions<CategoryModel, CategoryModelDTO> {
+    public async Task<PagedResult<CategoryModelView>> GetAll(ListQueryParams query) {
+      return await _crudService.GetPagedAsync(new ListOptions<CategoryModel, CategoryModelView> {
         QueryParams = query,
         Include = q => q.Include(c => c.Translations).ThenInclude(t => t.Language),
-        Selector = u => new CategoryModelDTO {
+        Selector = u => new CategoryModelView {
           Id = u.Id,
           Name = u.Translations
             .Where(t => t.LanguageId == 1)

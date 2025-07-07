@@ -17,6 +17,8 @@ namespace AlamandaApi.Data {
     public DbSet<TeamMemberModel> TeamMembers { get; set; }
     public DbSet<RefreshTokenModel> RefreshTokens { get; set; }
     public DbSet<ComicModel> Comics { get; set; }
+    public DbSet<ColorModel> ColorType { get; set; }
+    public DbSet<CoverModel> CoverType { get; set; }
     public DbSet<CategoryModel> Categories { get; set; }
     public DbSet<ChapterModel> Chapters { get; set; }
     public DbSet<CartModel> Carts { get; set; }
@@ -83,6 +85,7 @@ namespace AlamandaApi.Data {
 
 
       // translations
+      // ___________________________ CATEGORIES ___________________________
       modelBuilder.Entity<LanguageModel>().ToTable("Languages");
       modelBuilder.Entity<CategoryTranslationModel>().ToTable("CategoriesTranslations");
       modelBuilder.Entity<CategoryModel>()
@@ -101,6 +104,57 @@ namespace AlamandaApi.Data {
         .HasIndex(t => new { t.CategoryId, t.LanguageId })
         .IsUnique();
 
+      // ___________________________ ROLES ___________________________
+      modelBuilder.Entity<RoleTranslationModel>().ToTable("RolesTranslations");
+      modelBuilder.Entity<RoleModel>()
+        .HasMany(c => c.Translations)
+        .WithOne(t => t.Role)
+        .HasForeignKey(t => t.RoleId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      modelBuilder.Entity<RoleTranslationModel>()
+        .HasOne(t => t.Language)
+        .WithMany()
+        .HasForeignKey(t => t.LanguageId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<RoleTranslationModel>()
+        .HasIndex(t => new { t.RoleId, t.LanguageId })
+        .IsUnique();
+
+      // ___________________________ Colors ___________________________
+      modelBuilder.Entity<ColorModelTranslation>().ToTable("ColorTypeTranslations");
+      modelBuilder.Entity<ComicModel>()
+        .HasOne(tm => tm.ColorModel)
+        .WithMany()
+        .HasForeignKey(tm => tm.Color)
+        .OnDelete(DeleteBehavior.SetNull);
+
+      // ___________________________ Cover ___________________________
+      modelBuilder.Entity<CoverModelTranslation>().ToTable("CoverTypeTranslations");
+      modelBuilder.Entity<ComicModel>()
+        .HasOne(tm => tm.CoverModel)
+        .WithMany()
+        .HasForeignKey(tm => tm.Cover)
+        .OnDelete(DeleteBehavior.SetNull);
+
+      // ___________________________ COMIC ___________________________
+      modelBuilder.Entity<ComicTranslationsModel>().ToTable("ComicsTranslations");
+      modelBuilder.Entity<ComicModel>()
+        .HasMany(c => c.Translations)
+        .WithOne(t => t.Comic)
+        .HasForeignKey(t => t.ComicId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      modelBuilder.Entity<ComicTranslationsModel>()
+        .HasOne(t => t.Language)
+        .WithMany()
+        .HasForeignKey(t => t.LanguageId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<ComicTranslationsModel>()
+        .HasIndex(t => new { t.ComicId, t.LanguageId })
+        .IsUnique();
     }
   }
 }

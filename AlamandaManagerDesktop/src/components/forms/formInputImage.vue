@@ -117,13 +117,14 @@
 </template>
 
 <script lang="ts" setup>
+  import { FieldType } from '@/models/formFieldModel';
   import { ref, useAttrs } from 'vue';
   const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
   const uploadIcon = new URL('@/assets/icons/icon_upload.svg', import.meta.url).href;
   const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
   const deleteIcon = new URL('@/assets/icons/icon_delete.svg', import.meta.url).href;
   interface Props {
-    modelValue: File | null;
+    modelValue?: FieldType;
     label: string;
     id: string;
     previousImage?: string | null;

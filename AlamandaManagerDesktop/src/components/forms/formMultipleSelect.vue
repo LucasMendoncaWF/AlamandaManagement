@@ -137,11 +137,11 @@
 
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue';
-import { FormFieldOptionModel } from '@/models/formFieldModel';
+import { FieldType, FormFieldOptionModel } from '@/models/formFieldModel';
 import { convertFieldNameToLabel } from '@/utis/converter';
 
 interface Props {
-  modelValue?: string[];
+  modelValue?: FieldType;
   label: string;
   id: string;
   options?: FormFieldOptionModel[];
@@ -156,12 +156,12 @@ const search = ref('');
 const isOptionsOpen = ref(false);
 const inputRef = ref<HTMLInputElement | null>(null);
 
-const selected = ref<string[]>(props.modelValue ?? []);
+const selected = ref<string[]>(props.modelValue as string[] ?? []);
 
 watch(
   () => props.modelValue,
   (newVal) => {
-    if (newVal) selected.value = newVal;
+    if (newVal) selected.value = newVal as string[];
   },
   { immediate: true }
 );

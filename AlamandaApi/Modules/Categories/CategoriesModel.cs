@@ -13,7 +13,8 @@ namespace AlamandaApi.Services.Category
     public virtual ICollection<ComicModel> Comics { get; set; } = new List<ComicModel>();
     public virtual ICollection<CategoryTranslationModel> Translations { get; set; } = new List<CategoryTranslationModel>();
   }
-
+  // __________________ TRANSLATIONS __________________________________
+  
   public class CategoryTranslationModel {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
@@ -31,13 +32,11 @@ namespace AlamandaApi.Services.Category
     public string Name { get; set; } = null!;
   }
 
-  public class CategoryModelDTO {
+  //__________________________ RESPONSES _____________________________________________
+
+  public class CategoryModelView {
     public int Id { get; set; }
     public string Name { get; set; } = null!;
-    public List<CategoryTranslationModel> Translations { get; set; } = new();
-  }
-
-  public class CategoryFormDTO {
     public List<CategoryTranslationModel> Translations { get; set; } = new();
   }
 }

@@ -5,14 +5,20 @@ using AlamandaApi.Services.Cart;
 
 namespace AlamandaApi.Services.User {
 
-  public class PermissionModel {
-    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public int Id { get; set; }
+  public class LoginRequest {
+    [Required, EmailAddress]
+    public string Email { get; set; } = string.Empty;
 
-    [Required, StringLength(50)]
-    public string Name { get; set; } = null!;
+    [Required, DataType(DataType.Password)]
+    public string Password { get; set; } = string.Empty;
   }
 
+  public class RegisterRequest : LoginRequest {
+    [Required, StringLength(50)]
+    public string UserName { get; set; } = string.Empty;
+  }
+
+  // _________________________ ADMIN CRUD __________________________________
   public class UserCreate {
     [Required, StringLength(50)]
     [JsonPropertyName("username")]
@@ -41,6 +47,7 @@ namespace AlamandaApi.Services.User {
     public CartModel Cart { get; set; } = new CartModel();
   }
 
+  // _____________________________ REFRESH TOKEN _______________________________
   public class RefreshTokenModel {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
@@ -58,24 +65,21 @@ namespace AlamandaApi.Services.User {
     public UserModel User { get; set; } = null!;
   }
 
-  public class LoginRequest {
-    [Required, EmailAddress]
-    public string Email { get; set; } = string.Empty;
-
-    [Required, DataType(DataType.Password)]
-    public string Password { get; set; } = string.Empty;
-  }
-
-  public class RegisterRequest : LoginRequest {
-    [Required, StringLength(50)]
-    public string UserName { get; set; } = string.Empty;
-  }
-
   public class RefreshTokenRequest {
     public string RefreshToken { get; set; } = string.Empty;
   }
+
+  // _____________________________ PERMISSION _______________________________________
+  public class PermissionModel {
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+
+    [Required, StringLength(50)]
+    public string Name { get; set; } = null!;
+  }
   
-  public class UserListDto {
+  //__________________________ RESPONSES _____________________________________________
+  public class UserListView {
     public int Id { get; set; }
     public string UserName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;

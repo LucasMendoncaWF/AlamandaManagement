@@ -15,7 +15,7 @@ namespace AlamandaApi.Services.Team {
     [MaxLength(50)]
     [JsonPropertyOrder(2)]
     public string Social { get; set; } = null!;
-
+    public bool? Official_Member { get; set; } = false;
     public string? Picture { get; set; } = null;
   }
   public class TeamMemberCreationModel : TeamMemberBaseModel {
@@ -38,5 +38,18 @@ namespace AlamandaApi.Services.Team {
     public virtual ICollection<RoleModel> Roles { get; set; } = new List<RoleModel>();
     [JsonPropertyOrder(5)]
     public virtual ICollection<ComicModel> Comics { get; set; } = new List<ComicModel>();
+  }
+
+  //__________________________ RESPONSES _____________________________________________
+
+  public class TeamMemberListModel : TeamMemberBaseModel {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+
+    [JsonPropertyOrder(4)]
+    public virtual ICollection<RoleModel> Roles { get; set; } = new List<RoleModel>();
+    [JsonPropertyOrder(5)]
+    public virtual ICollection<ComicListModel> Comics { get; set; } = new List<ComicListModel>();
   }
 }

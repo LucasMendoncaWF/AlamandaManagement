@@ -1,4 +1,5 @@
 using AlamandaApi.Services.CRUD;
+using Microsoft.EntityFrameworkCore;
 using static AlamandaApi.Data.AppDbContext;
 
 namespace AlamandaApi.Services.Role {
@@ -9,10 +10,24 @@ namespace AlamandaApi.Services.Role {
       _crudService = crudService;
     }
 
-    public async Task<RoleModel> Create(RoleCreationModel role) {
+    public async Task<RoleCreationModel> Create(RoleCreationModel role) {
       var result = await _crudService.CreateEntityAsync(
         new UpdateEntityOptions<RoleModel, RoleCreationModel> {
-          PropertiesToUpdate = ["Name", "Name_En"],
+          AfterAll = async (entity, updated, tableName, context) => {
+          context.Entry(entity).Collection(e => e.Translations).Load();
+          var translationsDict = updated.Translations ?? new List<RoleTranslationModel>();
+          foreach (var lang in translationsDict) {
+            var langId = lang.LanguageId;
+            var translation = new RoleTranslationModel {
+              RoleId = entity.Id,
+              LanguageId = langId,
+              Name = lang.Name
+            };
+            context.Set<RoleTranslationModel>().Add(translation);
+          }
+          await context.SaveChangesAsync();
+          return entity;
+        },
           UpdatedObject = role,
         }
       );
@@ -22,8 +37,30 @@ namespace AlamandaApi.Services.Role {
     public async Task<RoleModel> Update(RoleModel role) {
       var result = await _crudService.UpdateEntityAsync(
         new UpdateEntityOptions<RoleModel, RoleModel> {
-          PropertiesToUpdate = ["Name", "Name_En"],
           UpdatedObject = role,
+          CustomUpdate = async (entity, updated, tableName, context) => {
+            context.Entry(entity).Collection(e => e.Translations).Load();
+            var translationsDict = updated.Translations ?? new List<RoleTranslationModel>();
+
+            foreach (var currTranslation in translationsDict) {
+              var langId = currTranslation.LanguageId;
+              var existingTranslation = entity.Translations
+                  .FirstOrDefault(t => t.LanguageId == langId);
+              if (existingTranslation != null) {
+                existingTranslation.Name = currTranslation.Name;
+              }
+              else {
+                var newTranslation = new RoleTranslationModel {
+                  RoleId = entity.Id,
+                  LanguageId = langId,
+                  Name = currTranslation.Name
+                };
+                context.Add(newTranslation);
+              }
+            }
+            await context.SaveChangesAsync();
+            return entity;
+          },
         }
       );
       return result;
@@ -33,14 +70,22 @@ namespace AlamandaApi.Services.Role {
       await _crudService.DeleteByIdAsync(Id);
     }
 
-    public async Task<PagedResult<RoleModelDto>> GetAll(ListQueryParams query) {
-      return await _crudService.GetPagedAsync(new ListOptions<RoleModel, RoleModelDto> {
+    public async Task<PagedResult<RoleModelView>> GetAll(ListQueryParams query) {
+      return await _crudService.GetPagedAsync(new ListOptions<RoleModel, RoleModelView> {
         QueryParams = query,
-        AllowedSortColumns = new HashSet<string> { "Name", "Name_En" },
-        Selector = u => new RoleModelDto {
+        Include = q => q.Include(c => c.Translations).ThenInclude(t => t.Language),
+        Selector = u => new RoleModelView {
           Id = u.Id,
-          Name = u.Name,
-          Name_En = u.Name_En!
+          Name = u.Translations
+            .Where(t => t.LanguageId == 1)
+            .Select(t => t.Name)
+            .FirstOrDefault() ?? "",
+          Translations = u.Translations.Select(r => new RoleTranslationModel {
+            Id = r.Id,
+            Name = r.Name,
+            LanguageId = r.LanguageId,
+            RoleId = r.RoleId
+          }).ToList(),
         }
       });
     }

@@ -62,10 +62,16 @@
     />
     <div class="list-scroll">
       <table class="list-table">
-        <ListHeader :hasClickItem="!!onClickItem" :sortBy="sortBy" :sortDirection="sortDirection" :sortHeader="onClickHeader" :item="data?.items[0]" />
+        <ListHeader 
+          :hasClickItem="!!onClickItem" 
+          :sortBy="sortBy" 
+          :sortDirection="sortDirection" 
+          :sortHeader="onClickHeader" 
+          :item="filteredItems && filteredItems[0]" 
+        />
         <tbody >
           <tr
-            v-for="item of data?.items" 
+            v-for="item of filteredItems" 
             class="list-item"
           >
             <ListItem
@@ -100,12 +106,12 @@
   import ListSearch from './listSearch.vue';
   import ListItem from './listItem.vue';
   import ListHeader from './listHeader.vue';
-  import ListForm from './listForm.vue';
-  import DeleteModal from './deleteModal.vue';
+  import ListForm from './modalForm/listForm.vue';
+  import DeleteModal from './modalForm/deleteModal.vue';
   import Loader from '../loader.vue';
 
   import queryKeys from '@/api/queryKeys';
-  import { ApiResponseData, ListResponse, QueryParams, SortDirection } from '@/api/defaultApi';
+  import { ApiResponseData, ListResponse, QueryParams, ResponseKeyType, SortDirection } from '@/api/defaultApi';
   import { FormFieldModel } from '@/models/formFieldModel';
 
   const emptyImg = new URL('@/assets/images/empty.webp', import.meta.url).href;
@@ -114,6 +120,7 @@
     title: string;
     maxImageSize?: number;
     label: string;
+    showFieldsOnTable: string[];
     searchFunction: (params: QueryParams) => Promise<ListResponse<TRes>>;
     addItemFunction: (data: TForm) => Promise<TRes>;
     updateItemFunction: (data: TForm) => Promise<TRes>;
@@ -131,6 +138,7 @@
   const queryString = ref('');
   const editId = ref<number | null>(null);
   const deleteId = ref<number | null>(null);
+  const filteredItems = ref<ApiResponseData[]>();
 
   const queryParams = ref({
     queryString: queryString.value,
@@ -230,6 +238,20 @@
   const convertToPlural = (value: string) => {
     return value[value.length-1] === 'y' ? value.replace('y', 'ies') : value + sortBy;
   }
+
+  watch(data, (newData) => {
+    if (newData) {
+      filteredItems.value = newData.items.map(item => {
+        const filtered: Record<string, ResponseKeyType> = {};
+        Object.keys(item).forEach(key => {
+          if ([...props.showFieldsOnTable, 'id']?.includes(key)) {
+            filtered[key] = item[key];
+          }
+        });
+        return filtered as ApiResponseData;
+      });
+    }
+  })
 
   watch(
     queryParams,

@@ -17,7 +17,7 @@ namespace AlamandaApi.Services.Category {
 
     [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] CategoryFormDTO category) {
+    public async Task<IActionResult> Create([FromBody] CategoryModelView category) {
       try {
         var result = await _categoryService.Create(category);
         return Ok(new { result });

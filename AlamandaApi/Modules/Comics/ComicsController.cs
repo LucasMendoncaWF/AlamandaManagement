@@ -17,7 +17,7 @@ namespace AlamandaApi.Services.Comics {
 
     [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] ComicCreationModel comic) {
+    public async Task<IActionResult> Create([FromBody] ComicModel comic) {
       try {
         var response = await _comicsService.Create(comic);
         return Ok(new { response });
@@ -29,7 +29,7 @@ namespace AlamandaApi.Services.Comics {
 
     [HttpPut("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Update([FromBody] ComicEditModel comic) {
+    public async Task<IActionResult> Update([FromBody] ComicModel comic) {
       try {
         var result = await _comicsService.Update(comic);
         return Ok(new { result });

@@ -2,6 +2,7 @@
   <List
     title="Users"
     label="user"
+    :showFieldsOnTable="['picture', 'userName', 'email', 'permission']"
     :maxImageSize="500"
     :searchFunction="getUsers"
     :getFieldFunction="getUserFields"

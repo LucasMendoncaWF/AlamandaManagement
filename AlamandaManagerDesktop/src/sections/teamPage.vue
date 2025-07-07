@@ -2,6 +2,7 @@
   <List
     title="Team"
     label="member"
+    :showFieldsOnTable="['name', 'picture', 'social', 'roles', 'comics']"
     :maxImageSize="500"
     :searchFunction="getMembers"
     :getFieldFunction="getMembersFields"

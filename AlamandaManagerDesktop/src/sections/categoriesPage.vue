@@ -2,6 +2,7 @@
   <List
     title="Category"
     label="category"
+    :showFieldsOnTable="['name']"
     :searchFunction="getCategories"
     :getFieldFunction="getCategoriesFields"
     :addItemFunction="addCategory"

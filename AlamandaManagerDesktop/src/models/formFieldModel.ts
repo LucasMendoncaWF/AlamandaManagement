@@ -21,8 +21,12 @@ export enum FieldDataTypeEnum {
   String = 1,
   Number = 2,
   Date = 3,
-  Options = 4,
-  OptionsArray = 5,
-  Image = 6,
-  ImageArray = 7,
+  Boolean = 4,
+  Options = 5,
+  OptionsArray = 6,
+  TextArea = 7,
+  Image = 8,
+  ImageArray = 9,
 }
+
+export type FieldType = File | string | number | null | string[] | File[];

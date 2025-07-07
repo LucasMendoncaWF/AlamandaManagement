@@ -3,6 +3,7 @@
     v-if="currentComicSelected === null"
     title="Comics"
     label="comic"
+    :showFieldsOnTable="['name', 'categories', 'publish_Date']"
     :maxImageSize="2000"
     :searchFunction="getComics"
     :getFieldFunction="getComicsFields"
@@ -20,7 +21,6 @@
 
   const currentComicSelected = ref<number | null>(null)
   const onClickChapter = (id: number) => {
-    console.log('test')
     currentComicSelected.value = id;
   }
 </script>

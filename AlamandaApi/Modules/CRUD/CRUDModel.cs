@@ -23,5 +23,6 @@ namespace AlamandaApi.Services.CRUD {
     public Func<T, X, string, AppDbContext, Task<T>>? CustomUpdate { get; set; }
     public Func<T, X, string, AppDbContext, Task<T>>? AfterAll { get; set; }
     public Func<IQueryable<T>, IQueryable<T>>? Include { get; set; }
+    public string? foreignKeyPropertyName { get; set; } = null;
   }
 }

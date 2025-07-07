@@ -9,10 +9,12 @@ namespace AlamandaApi.Services.FieldsSchema {
     String = 1,
     Number = 2,
     Date = 3,
-    Options = 4,
-    OptionsArray = 5,
-    Image = 6,
-    ImageArray = 7,
+    Boolean = 4,
+    Options = 5,
+    OptionsArray = 6,
+    TextArea = 7,
+    Image = 8,
+    ImageArray = 9,
   }
 
   public class FieldInfo {
@@ -144,8 +146,13 @@ namespace AlamandaApi.Services.FieldsSchema {
           });
         }
 
-        if ((inferredType == FieldDataType.Options || inferredType == FieldDataType.OptionsArray) && fkTable != null)
-          foreignKeys[ToFirstLowerCase(name)] = fkTable;
+        if ((inferredType == FieldDataType.Options || inferredType == FieldDataType.OptionsArray) && fkTable != null) {
+          string baseName = ToFirstLowerCase(name);
+          if (name.EndsWith("id")) {
+            baseName = name[..^2];
+          }
+          foreignKeys[baseName] = fkTable;
+        }
       }
       reader.Close();
     }
@@ -176,12 +183,15 @@ namespace AlamandaApi.Services.FieldsSchema {
           var otherTable = reader2.GetString(1);
           if (otherTable.ToLower() == "languages") continue;
 
-          fields.Add(new FieldInfo {
-            FieldName = ToFirstLowerCase(otherTable),
-            DataType = FieldDataType.OptionsArray,
-            OptionsArray = await GetOptions(otherTable),
-            IsRequired = false
-          });
+          var fieldName = ToFirstLowerCase(otherTable);
+          if (!fields.Any(f => f.FieldName == fieldName)) {
+            fields.Add(new FieldInfo {
+              FieldName = fieldName,
+              DataType = FieldDataType.OptionsArray,
+              OptionsArray = await GetOptions(otherTable),
+              IsRequired = false
+            });
+          }
         }
       }
     }
@@ -314,6 +324,8 @@ namespace AlamandaApi.Services.FieldsSchema {
       if (isForeignKey) return isJunction ? FieldDataType.OptionsArray : FieldDataType.Options;
       if (name.Contains("pictures") && columnType.StartsWith("json")) return FieldDataType.ImageArray;
       if (name.Contains("picture")) return FieldDataType.Image;
+      if (sqlType == "text") return FieldDataType.TextArea;
+      if (sqlType == "boolean" || sqlType == "bool") return FieldDataType.Boolean;
       if (sqlType.Contains("int") || sqlType is "numeric" or "decimal" or "float" or "double precision") return FieldDataType.Number;
       if (sqlType.Contains("date") || sqlType.Contains("time")) return FieldDataType.Date;
       return FieldDataType.String;
@@ -342,10 +354,14 @@ namespace AlamandaApi.Services.FieldsSchema {
           cmd.CommandText = $"SELECT * FROM \"{translationTable}\" WHERE \"LanguageId\" = 1; LIMIT 100";
           await using var reader = await cmd.ExecuteReaderAsync();
           while (await reader.ReadAsync()) {
-            var CategoryId = Try(reader, ToSingular(table) + "Id");
+            var idField =
+              Try(reader, ToSingular(table) + "Id") ??
+              Try(reader, "Id");
+
             var name = Try(reader, "name") ?? Try(reader, "title") ?? Try(reader, "language");
-            if (CategoryId != null && name != null)
-              result.Add(new Option { Id = CategoryId, Name = name });
+
+            if (idField != null && name != null)
+              result.Add(new Option { Id = idField, Name = name });
           }
         }
         else {

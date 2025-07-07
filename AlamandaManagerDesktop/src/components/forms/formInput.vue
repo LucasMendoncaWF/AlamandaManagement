@@ -36,18 +36,19 @@
       :id="id"
       v-bind="attrs"
       @input="onInput"
-      :value="modelValue"
+      :value="modelValue?.toString()"
       :disabled="disabled"
     />
   </div>
 </template>
 
 <script lang="ts" setup>
+  import { FieldType } from '@/models/formFieldModel';
   import { convertFieldNameToLabel } from '@/utis/converter';
-import { useAttrs } from 'vue';
+  import { useAttrs } from 'vue';
 
   interface Props {
-    modelValue?: string;
+    modelValue?: FieldType;
     label: string;
     id: string;
     variant?: 'inverted';

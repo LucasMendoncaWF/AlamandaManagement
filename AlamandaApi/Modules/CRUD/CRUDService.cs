@@ -35,9 +35,7 @@ namespace AlamandaApi.Services.CRUD {
       int pageSize = options.QueryParams.PageSize ?? 10;
       int page = options.QueryParams.Page ?? 1;
       string? requestedSortBy = options.QueryParams.SortBy;
-      string sortBy = options.AllowedSortColumns
-        .FirstOrDefault(c => string.Equals(c, requestedSortBy, StringComparison.OrdinalIgnoreCase))
-        ?? "Id";
+      string sortBy = requestedSortBy ?? "Id";
 
       var propertyName = typeof(T).GetProperties()
         .FirstOrDefault(p => string.Equals(p.Name, sortBy, StringComparison.OrdinalIgnoreCase))

@@ -23,24 +23,6 @@
     column-gap: 15px;
   }
 
-  .form-input-box {
-    width: calc((100% / 3) - 10px);
-    margin-bottom: 10px;
-
-    &--double {
-      width: 100%;
-    }
-
-    &--image {
-      margin-bottom: 5px;
-      width: 100%;
-
-      .image-input-box {
-        width: 50%;
-      }
-    }
-  }
-
   .translation {
     .translation-button {
       all: unset;
@@ -130,61 +112,17 @@
     <ModalBody>
       <form v-if="!isFieldsError && !isFieldsPending" @submit.prevent="onSubmit" class="form">
         <div class="flex inputs-area">
-          <template v-for="field in fields" :key="field.fieldName">
-            <div :class="`form-input-box ${fields && (fields.length > 2) ? '' : 'form-input-box--double'}`" v-if="isSimpleField(field)">
-              <FormInput
+            <template v-for="field in fields" :key="field.fieldName">
+              <DynamicFormField
                 :id="field.fieldName"
-                :label="field.fieldName"
-                v-model="form[field.fieldName] as string"
-                :maxlength="field.fieldMaxSize ? Number(field.fieldMaxSize) : undefined"
-                :type="getInputType(field)"
-                variant="inverted"
-                :accept="(field.dataType === FieldDataTypeEnum.Image || field.dataType === FieldDataTypeEnum.ImageArray) ? 'image/*' : undefined"
-                :multiple="field.dataType === FieldDataTypeEnum.ImageArray || field.dataType === FieldDataTypeEnum.OptionsArray"
-                :required="field.isRequired"
-                :disabled="isLoading"
+                :field="field"
+                :form="form"
+                v-model="form[field.fieldName]"
+                :imageField="imageField"
+                :isLoading="isLoading"
+                :onRemoveImage="onRemoveImage"
+                :variant="!(fields && (fields.length > 2)) ? 'double' : ''"
               />
-            </div>
-            <div class="form-input-box form-input-box--double" v-if="field.dataType === FieldDataTypeEnum.OptionsArray">
-              <FormMultipleSelect
-                :id="field.fieldName"
-                :label="field.fieldName"
-                v-model="form[field.fieldName] as string[]"
-                @update:modelValue="form[field.fieldName] = $event"
-                :options="field.optionsArray"
-                variant="inverted"
-                :required="field.isRequired"
-                :disabled="isLoading"
-              />
-            </div>
-
-            <div class="form-input-box" v-if="field.dataType === FieldDataTypeEnum.Options">
-              <FormSelect
-                :id="field.fieldName"
-                :label="field.fieldName"
-                v-model="form[field.fieldName] as string"
-                @update:modelValue="form[field.fieldName] = $event"
-                :options="field.optionsArray"
-                variant="inverted"
-                :required="field.isRequired"
-                :disabled="isLoading"
-              />
-            </div>
-
-            <div class="form-input-box--image" v-if="field.dataType === FieldDataTypeEnum.Image">
-              <div class="image-input-box">
-                <FormInputImage
-                  :id="field.fieldName"
-                  :label="field.fieldName"
-                  v-model="form[field.fieldName] as File"
-                  @update:modelValue="form[field.fieldName] = $event"
-                  :previousImage="imageField[field.fieldName]"
-                  :onRemoveImage="onRemoveImage"
-                  variant="inverted"
-                  :disabled="isLoading"
-                />
-              </div>
-            </div>
             <div class="form-input-box--double translation" v-if="field.dataType === FieldDataTypeEnum.Translations">
               <button type="button" @click="onToggleTranslationFields" class="translation-button">
                 <h3>
@@ -200,19 +138,16 @@
               >
                 <h4 class="language-title">{{ group.languageName.toUpperCase() }}</h4>
                 <div class="inputs-area language-area">
-                  <template v-for="tField in group.fields" :key="tField.fieldName">
-                    <div class="form-input-box">
-                      <FormInput
-                        :id="`translations_${group.languageId}_${tField.fieldName}`"
-                        :label="tField.fieldName"
-                        v-model="form[`translations_${group.languageId}_${tField.fieldName}`] as string"
-                        :maxlength="tField.fieldMaxSize ? Number(tField.fieldMaxSize) : undefined"
-                        :type="getInputType(tField)"
-                        variant="inverted"
-                        :required="tField.isRequired"
-                        :disabled="isLoading"
-                      />
-                    </div>
+                  <template v-for="tField in [...group.fields]?.sort((a, b) => a.dataType - b.dataType)" :key="tField.fieldName">
+                    <DynamicFormField
+                      :id="`translations_${group.languageId}_${tField.fieldName}`"
+                      :field="tField"
+                      :form="form"
+                      :imageField="imageField"
+                      v-model="form[`translations_${group.languageId}_${tField.fieldName}`]"
+                      :isLoading="isLoading"
+                      :onRemoveImage="onRemoveImage"
+                    />
                   </template>
                 </div>
               </div>
@@ -236,21 +171,16 @@
 
 <script lang="ts" setup generic="TRes, TForm">
   import { reactive, ref, toRaw, watch } from 'vue'
-  import FormInput from '@/components/forms/formInput.vue'
   import FormSubmit from '@/components/forms/formSubmit.vue'
-  import FormInputImage from '@/components/forms/formInputImage.vue'
   import ErrorMessage from '@/components/errorMessage.vue'
   import Loader from '@/components/loader.vue'
   import FormButton from '@/components/forms/formButton.vue'
   import { fileToBase64 } from '@/utis/converter'
   import { ApiResponseData, getErrorMessage, ResponseKeyType } from '@/api/defaultApi'
-  import { FormFieldModel, FieldDataTypeEnum } from '@/models/formFieldModel'
-  import FormMultipleSelect from '../forms/formMultipleSelect.vue'
-  import FormSelect from '../forms/formSelect.vue'
-  import ModalBackground from '../modals/modalBackground.vue'
-  import ModalBody from '../modals/modalBody.vue'
-
-  type FieldType = File | string | number | null | string[] | File[];
+  import { FormFieldModel, FieldDataTypeEnum, FieldType } from '@/models/formFieldModel'
+  import ModalBackground from '@/components/modals/modalBackground.vue'
+  import ModalBody from '@/components/modals/modalBody.vue'
+import DynamicFormField from './dynamicFormField.vue'
 
   type ReactiveForm = Record<string, FieldType>;
 
@@ -272,7 +202,7 @@
   const form = reactive<ReactiveForm>({});
   const imageField = reactive<Record<string, string | null>>({});
   const isLoading = ref(false);
-  const showTranslations = ref(props.fields?.length === 1);
+  const showTranslations = ref(true);
   const errorMessage = ref<string | null>(null);
 
   const onToggleTranslationFields = () => {
@@ -281,22 +211,6 @@
 
   const onCloseErrorMessage = () => {
     errorMessage.value = null;
-  };
-
-  const isSimpleField = (field: FormFieldModel) => {
-    const dataType = field.dataType;
-    return [FieldDataTypeEnum.Number, FieldDataTypeEnum.String, FieldDataTypeEnum.Date].includes(dataType);
-  };
-
-  const getInputType = (field: FormFieldModel) => {
-    switch (field.dataType) {
-      case FieldDataTypeEnum.Number:
-        return 'number';
-      case FieldDataTypeEnum.Date:
-        return 'date';
-      default:
-        return 'text';
-    }
   };
 
   const onSubmit = async () => {
@@ -424,12 +338,12 @@
 
           for (const group of field.translationsGroups ?? []) {
             const match = translations.find(t => t.languageId?.toString() === group.languageId?.toString());
-            console.log(toRaw(group), toRaw(translations))
             if (!match) continue;
 
             for (const tField of group.fields) {
+              console.log(toRaw(tField))
               const value = match[tField.fieldName];
-              form[`translations_${group.languageId}_${tField.fieldName}`] = typeof value === 'string' ? value : '';
+              form[`translations_${group.languageId}_${tField.fieldName}`] = value || '';
             }
           }
         } else {

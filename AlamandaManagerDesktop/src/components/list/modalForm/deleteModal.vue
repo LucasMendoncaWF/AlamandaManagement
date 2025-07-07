@@ -26,10 +26,10 @@
 
 <script lang="ts" setup>
 import { ref } from 'vue';
-import ModalBody from '../modals/modalBody.vue';
-import ModalBackground from '../modals/modalBackground.vue';
-import FormButton from '../forms/formButton.vue';
-import ErrorMessage from '../errorMessage.vue';
+import ModalBody from '@/components/modals/modalBody.vue';
+import ModalBackground from '@/components/modals/modalBackground.vue';
+import FormButton from '@/components/forms/formButton.vue';
+import ErrorMessage from '@/components/errorMessage.vue';
 
   interface Props {
     onCancel: () => void;

@@ -2,6 +2,7 @@
   <List
     title="Roles"
     label="role"
+    :showFieldsOnTable="['name']"
     :searchFunction="getRoles"
     :getFieldFunction="getRolesFields"
     :addItemFunction="addRole"

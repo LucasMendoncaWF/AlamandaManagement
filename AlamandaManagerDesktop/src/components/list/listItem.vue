@@ -79,12 +79,11 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, toRaw, watch } from 'vue';
+  import { computed, ref, watch } from 'vue';
   const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
   const chaptersIcon = new URL('@/assets/icons/icon_chapters.svg', import.meta.url).href;
   const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
   import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
-  import { FormFieldOptionModel } from '@/models/formFieldModel';
 
   interface ViewObject {
     name: string;
@@ -105,7 +104,6 @@
   const imageUrl = ref(props.item.picture || '');
 
   const onClickCurrentItem = () => {
-    console.log(props.item)
     if(props.onClickItem && props.item?.id) {
       props.onClickItem(props.item.id);
     }
