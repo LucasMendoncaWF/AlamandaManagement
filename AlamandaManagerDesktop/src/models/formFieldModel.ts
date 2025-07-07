@@ -4,6 +4,11 @@ export interface FormFieldModel {
   fieldMaxSize: string;
   optionsArray: FormFieldOptionModel[];
   isRequired: boolean;
+  translationsGroups: {
+    languageId: number;
+    languageName: string;
+    fields: FormFieldModel[]
+  }[];
 }
 
 export interface FormFieldOptionModel {
@@ -12,11 +17,12 @@ export interface FormFieldOptionModel {
 }
 
 export enum FieldDataTypeEnum {
-  String = 0,
-  Number = 1,
-  Date = 2,
-  Options = 3,
-  Image = 4,
-  ImageArray = 5,
-  OptionsArray = 6,
+  Translations = 0,
+  String = 1,
+  Number = 2,
+  Date = 3,
+  Options = 4,
+  OptionsArray = 5,
+  Image = 6,
+  ImageArray = 7,
 }

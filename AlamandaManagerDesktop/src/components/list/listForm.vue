@@ -17,10 +17,10 @@
   .inputs-area {
     display: flex;
     align-items: end;
-    justify-content: space-between;
+    justify-content: start;
     flex-wrap: wrap;
     width: 100%;
-    gap: 15px;
+    column-gap: 15px;
   }
 
   .form-input-box {
@@ -28,19 +28,83 @@
     margin-bottom: 10px;
 
     &--double {
-      flex-grow: 1;
+      width: 100%;
     }
 
     &--image {
       margin-bottom: 5px;
+      width: 100%;
+
+      .image-input-box {
+        width: 50%;
+      }
+    }
+  }
+
+  .translation {
+    .translation-button {
+      all: unset;
+      border-bottom: 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+
+      &:hover {
+        opacity: 0.7;
+      }
+
+      .triangle {
+        width: 10px;
+        height: 10px;
+        border-right: 3px solid $black;
+        border-bottom: 3px solid $black;
+        margin-left: 8px;
+        margin-top: 2px;
+        margin-left: 10px;
+        margin-bottom: 5px;
+        transform: rotate(45deg);
+
+        &--up {
+          margin-bottom: -2px;
+          transform: rotate(-135deg);
+        }
+      }
+    }
+
+    .language-title {
+      margin: 0;
+      border-bottom: 2px solid $primary;
+      color: $primary;
+    }
+
+    .language-area {
+      margin-bottom: 15px;
+    }
+
+    .translation-collapse {
+      transition: 0.4s;
+    }
+
+    .hidden {
+      max-height: 0;
+      overflow: auto;
+    }
+
+    .collapse-animation {
+      max-height: 1000px;
     }
   }
 
   .form-buttons {
     display: flex;
+    padding: 10px 0;
     justify-content: end;
     gap: 8px;
     margin-top: 10px;
+    position: sticky;
+    background-color: $white;
+    bottom: -20px;
+    left: 0;
   }
 
   @keyframes FormAppear {
@@ -108,16 +172,50 @@
             </div>
 
             <div class="form-input-box--image" v-if="field.dataType === FieldDataTypeEnum.Image">
-              <FormInputImage
-                :id="field.fieldName"
-                :label="field.fieldName"
-                v-model="form[field.fieldName] as File"
-                @update:modelValue="form[field.fieldName] = $event"
-                :previousImage="imageField[field.fieldName]"
-                :onRemoveImage="onRemoveImage"
-                variant="inverted"
-                :disabled="isLoading"
-              />
+              <div class="image-input-box">
+                <FormInputImage
+                  :id="field.fieldName"
+                  :label="field.fieldName"
+                  v-model="form[field.fieldName] as File"
+                  @update:modelValue="form[field.fieldName] = $event"
+                  :previousImage="imageField[field.fieldName]"
+                  :onRemoveImage="onRemoveImage"
+                  variant="inverted"
+                  :disabled="isLoading"
+                />
+              </div>
+            </div>
+            <div class="form-input-box--double translation" v-if="field.dataType === FieldDataTypeEnum.Translations">
+              <button type="button" @click="onToggleTranslationFields" class="translation-button">
+                <h3>
+                  Translation Fields 
+                  ({{ form[`translations_${field.translationsGroups[0]?.languageId}_${field.translationsGroups[0]?.fields[0]?.fieldName}`] }})
+                </h3>
+                <div :class="`triangle ${showTranslations ? 'triangle--up' : ''}`"></div>
+              </button>
+              <div 
+                :class="`translation-collapse ${showTranslations ? 'collapse-animation' : 'hidden'}`" 
+                v-for="group in field.translationsGroups" 
+                :key="group.languageId"
+              >
+                <h4 class="language-title">{{ group.languageName.toUpperCase() }}</h4>
+                <div class="inputs-area language-area">
+                  <template v-for="tField in group.fields" :key="tField.fieldName">
+                    <div class="form-input-box">
+                      <FormInput
+                        :id="`translations_${group.languageId}_${tField.fieldName}`"
+                        :label="tField.fieldName"
+                        v-model="form[`translations_${group.languageId}_${tField.fieldName}`] as string"
+                        :maxlength="tField.fieldMaxSize ? Number(tField.fieldMaxSize) : undefined"
+                        :type="getInputType(tField)"
+                        variant="inverted"
+                        :required="tField.isRequired"
+                        :disabled="isLoading"
+                      />
+                    </div>
+                  </template>
+                </div>
+              </div>
             </div>
           </template>
         </div>
@@ -137,7 +235,7 @@
 </template>
 
 <script lang="ts" setup generic="TRes, TForm">
-  import { reactive, ref, watch } from 'vue'
+  import { reactive, ref, toRaw, watch } from 'vue'
   import FormInput from '@/components/forms/formInput.vue'
   import FormSubmit from '@/components/forms/formSubmit.vue'
   import FormInputImage from '@/components/forms/formInputImage.vue'
@@ -174,7 +272,12 @@
   const form = reactive<ReactiveForm>({});
   const imageField = reactive<Record<string, string | null>>({});
   const isLoading = ref(false);
+  const showTranslations = ref(props.fields?.length === 1);
   const errorMessage = ref<string | null>(null);
+
+  const onToggleTranslationFields = () => {
+    showTranslations.value = !showTranslations.value;
+  }
 
   const onCloseErrorMessage = () => {
     errorMessage.value = null;
@@ -221,7 +324,7 @@
     isLoading.value = true;
 
     try {
-      const sendData = {} as Record<string, unknown>;
+      const sendData: Record<string, unknown> = {};
 
       for (const f of props.fields) {
         if (f.dataType === FieldDataTypeEnum.Image) {
@@ -240,6 +343,23 @@
           }
         } else if (f.dataType === FieldDataTypeEnum.OptionsArray) {
           sendData[f.fieldName + 'Ids'] = form[f.fieldName] as ResponseKeyType;
+        } else if (f.dataType === FieldDataTypeEnum.Translations && Array.isArray(f.translationsGroups)) {
+          const translations: any[] = [];
+
+          for (const group of f.translationsGroups) {
+            const translationItem: Record<string, FieldType> = {
+              languageId: group.languageId
+            };
+
+            for (const tf of group.fields) {
+              const key = `translations_${group.languageId}_${tf.fieldName}`;
+              translationItem[tf.fieldName] = form[key] ?? '';
+            }
+
+            translations.push(translationItem);
+          }
+
+          sendData[f.fieldName] = translations;
         } else {
           sendData[f.fieldName] = form[f.fieldName] as ResponseKeyType;
         }
@@ -250,6 +370,7 @@
       } else {
         await props.addItemFunction(sendData as TForm);
       }
+
       props.onComplete();
     } catch (e) {
       errorMessage.value = getErrorMessage(e) || 'Error on sending the data.';
@@ -290,14 +411,6 @@
           } else {
             form[key] = [];
           }
-        } else if (field.dataType === FieldDataTypeEnum.Options) {
-          const obj = typedData[key.replace('id', '')];
-          if (typeof obj === 'object' && obj !== null && 'id' in obj) {
-            const objTyped = obj as { id: number | string };
-            form[key] = objTyped.id.toString();
-          } else {
-            form[key] = null;
-          }
         } else if (field.dataType === FieldDataTypeEnum.Image) {
           form[key] = null;
           const val = typedData[key];
@@ -305,6 +418,19 @@
             imageField[key] = val;
           } else {
             imageField[key] = null;
+          }
+        } else if (field.dataType === FieldDataTypeEnum.Translations && Array.isArray(typedData[key])) {
+          const translations = typedData[key] as Array<Record<string, any>>;
+
+          for (const group of field.translationsGroups ?? []) {
+            const match = translations.find(t => t.languageId?.toString() === group.languageId?.toString());
+            console.log(toRaw(group), toRaw(translations))
+            if (!match) continue;
+
+            for (const tField of group.fields) {
+              const value = match[tField.fieldName];
+              form[`translations_${group.languageId}_${tField.fieldName}`] = typeof value === 'string' ? value : '';
+            }
           }
         } else {
           form[key] = typedData[key] as FieldType;

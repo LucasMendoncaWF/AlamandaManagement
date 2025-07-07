@@ -7,6 +7,7 @@ using AlamandaApi.Services.Role;
 using AlamandaApi.Services.Chapters;
 using AlamandaApi.Services.Category;
 using AlamandaApi.Services.Cart;
+using AlamandaApi.Services.Language;
 
 namespace AlamandaApi.Data {
   public class AppDbContext : DbContext {
@@ -79,6 +80,27 @@ namespace AlamandaApi.Data {
           .HasOne(ci => ci.Comic)
           .WithMany()
           .HasForeignKey(ci => ci.ComicId);
+
+
+      // translations
+      modelBuilder.Entity<LanguageModel>().ToTable("Languages");
+      modelBuilder.Entity<CategoryTranslationModel>().ToTable("CategoriesTranslations");
+      modelBuilder.Entity<CategoryModel>()
+        .HasMany(c => c.Translations)
+        .WithOne(t => t.Category)
+        .HasForeignKey(t => t.CategoryId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      modelBuilder.Entity<CategoryTranslationModel>()
+        .HasOne(t => t.Language)
+        .WithMany()
+        .HasForeignKey(t => t.LanguageId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<CategoryTranslationModel>()
+        .HasIndex(t => new { t.CategoryId, t.LanguageId })
+        .IsUnique();
+
     }
   }
 }

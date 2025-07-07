@@ -68,7 +68,7 @@
   </td>
 
   <td
-    v-for="(value, key) in restFields"
+    v-for="(value, key) in showFields"
     :key="key"
     :title="typeof value === 'string' ? value : key"
   >
@@ -79,7 +79,7 @@
 </template>
 
 <script lang="ts" setup>
-  import { computed, ref, watch } from 'vue';
+  import { computed, ref, toRaw, watch } from 'vue';
   const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
   const chaptersIcon = new URL('@/assets/icons/icon_chapters.svg', import.meta.url).href;
   const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
@@ -89,6 +89,10 @@
   interface ViewObject {
     name: string;
     id: string;
+    translations?: {
+      languageId: number;
+      name:string;
+    }[];
   }
 
   interface Props<T = ApiResponseData> {
@@ -123,7 +127,13 @@
 
   function getValue(value: ViewObject | ViewObject[]): string {
     if (Array.isArray(value)) {
-      return value.map((item: FormFieldOptionModel) => item.name).join(', ');
+      
+      return value.map((item: ViewObject) =>  {
+        if(item.translations) {
+          return item.translations.find(i => i.languageId === 1)?.name;
+        }
+        return item.name;
+      }).join(', ');
     } 
     else if (value && typeof value === 'object') {
       return value.name ?? '';
@@ -131,9 +141,9 @@
     return String(value ?? '');
   }
 
-  const restFields = computed(() => {
+  const showFields = computed(() => {
     return Object.entries(props.item)
-      .filter(([key]) => !key.toLowerCase().includes('id') && key !== imageField.value)
+      .filter(([key]) => !key.toLowerCase().includes('id') && !key.toLowerCase().includes('translations') && key !== imageField.value)
       .reduce((acc, [key, value]) => {
         acc[key] = value;
         return acc;

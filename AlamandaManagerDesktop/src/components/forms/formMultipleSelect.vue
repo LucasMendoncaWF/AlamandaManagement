@@ -59,6 +59,7 @@
     position: absolute;
     width: calc(100% - 4px);
     top: calc(100% - 5px);
+    z-index: 99;
   }
 
   &--inverted {

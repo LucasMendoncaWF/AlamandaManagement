@@ -17,7 +17,7 @@ namespace AlamandaApi.Services.Category {
 
     [HttpPost("")]
     [Authorize(Policy = "AdminOnly")]
-    public async Task<IActionResult> Create([FromBody] CategoryCreationModel category) {
+    public async Task<IActionResult> Create([FromBody] CategoryFormDTO category) {
       try {
         var result = await _categoryService.Create(category);
         return Ok(new { result });
@@ -69,6 +69,7 @@ namespace AlamandaApi.Services.Category {
     public async Task<IActionResult> getFields() {
       try {
         var result = await _fieldSchemaService.GetFieldTypes("Categories");
+         result.RemoveAll(item => item.FieldName.ToLower() == "comics");
         return Ok(result);
       }
       catch {

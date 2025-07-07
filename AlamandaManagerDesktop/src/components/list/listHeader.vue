@@ -52,7 +52,7 @@
 
     <th
       class="sortable"
-      v-for="key in restFields"
+      v-for="key in showFields"
       :key="key"
       role="button"
        @click="() => sortHeader(key)"
@@ -87,8 +87,8 @@
     return props.item && Object.keys(props.item).find((key) => props.item && isImageUrl(props.item[key]) || key.toLowerCase() === 'picture');
   });
 
-  const restFields = computed(() => {
+  const showFields = computed(() => {
     return props.item && Object.keys(props.item)
-      .filter((key) => !key.toLowerCase().includes('id') && key !== imageField.value);
+      .filter((key) => !key.toLowerCase().includes('id') && !key.toLowerCase().includes('translations') && key !== imageField.value);
   });
 </script>

@@ -71,8 +71,7 @@ namespace AlamandaApi.Services.Comics {
           Picture = u.Picture,
           Categories = u.Categories.Select(c => new CategoryModel {
             Id = c.Id,
-            Name = c.Name,
-            Name_En = c.Name_En
+            Translations = c.Translations
           }).ToList(),
           TeamMembers = u.TeamMembers.Select(c => new TeamMemberModel {
             Id = c.Id,

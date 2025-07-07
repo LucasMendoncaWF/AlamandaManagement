@@ -14,14 +14,13 @@
 
     .previous-image {
       position: relative;
-      max-width: 200px;
-      max-height: 300px;
+      max-width: 50%;
+      max-height: 100%;
       min-width: 150px;
       border: 2px solid $secondary;
       border-radius: 5px;
       margin-top: 5px;
       padding: 12px;
-      margin-bottom: 5px;
       img.preview {
         width: 100%;
       }

@@ -61,7 +61,8 @@ import { useAttrs } from 'vue';
     disabled?: boolean;
   }
  
-  defineProps<Props>();
+  const props = defineProps<Props>();
+  console.log(props.modelValue, props.options)
   const attrs = useAttrs();
 
   const emit = defineEmits<{

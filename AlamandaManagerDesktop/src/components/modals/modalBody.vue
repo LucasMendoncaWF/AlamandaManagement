@@ -7,10 +7,10 @@
   z-index: 99;
   border: 2px solid $black;
   left: calc(10% + 10px);
-  top: 130px;
+  top: 5%;
   box-shadow: -7px 11px $black;
   animation: FormAppear 0.3s;
-  max-height: 500px;
+  max-height: calc(90% - 40px);
   overflow: auto;
 
   @keyframes FormAppear {

@@ -26,16 +26,23 @@ namespace AlamandaApi.Services.CRUD {
     }
 
     public async Task<PagedResult<TResult>> GetPagedAsync<TResult>(ListOptions<T, TResult> options) {
-      var dbSet = _context.Set<T>().AsNoTracking();
+      IQueryable<T> dbSet = _context.Set<T>().AsNoTracking();
+
+      if (options.Include != null) {
+        dbSet = options.Include(dbSet);
+      }
+
       int pageSize = options.QueryParams.PageSize ?? 10;
       int page = options.QueryParams.Page ?? 1;
       string? requestedSortBy = options.QueryParams.SortBy;
       string sortBy = options.AllowedSortColumns
-          .FirstOrDefault(c => string.Equals(c, requestedSortBy, StringComparison.OrdinalIgnoreCase))
-          ?? "Id";
+        .FirstOrDefault(c => string.Equals(c, requestedSortBy, StringComparison.OrdinalIgnoreCase))
+        ?? "Id";
+
       var propertyName = typeof(T).GetProperties()
         .FirstOrDefault(p => string.Equals(p.Name, sortBy, StringComparison.OrdinalIgnoreCase))
         ?.Name ?? "Id";
+
       bool descending = options.QueryParams.SortDirection == "descending";
       string query = options.QueryParams.QueryString?.Trim() ?? "";
       var filter = CRUDServiceHelper.BuildStringContainsFilter<T>(query, options.AllowedSortColumns);
@@ -45,8 +52,8 @@ namespace AlamandaApi.Services.CRUD {
         return cached!;
 
       IQueryable<T> filtered = !string.IsNullOrEmpty(query) && filter != null ? dbSet.Where(filter) : dbSet;
-      var lambda = GetOrderByExpression<T>(propertyName);
 
+      var lambda = GetOrderByExpression<T>(propertyName);
       filtered = filtered.Provider.CreateQuery<T>(
         Expression.Call(
           typeof(Queryable),
@@ -59,7 +66,11 @@ namespace AlamandaApi.Services.CRUD {
 
       var totalItems = await filtered.CountAsync();
       var totalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
-      var items = await filtered.Skip((page - 1) * pageSize).Take(pageSize).Select(options.Selector).ToListAsync();
+      var items = await filtered
+        .Skip((page - 1) * pageSize)
+        .Take(pageSize)
+        .Select(options.Selector)
+        .ToListAsync();
 
       var result = new PagedResult<TResult> {
         Items = items,
@@ -98,8 +109,9 @@ namespace AlamandaApi.Services.CRUD {
 
     public async Task<T> CreateEntityAsync<X>(UpdateEntityOptions<T, X> options) where X : class {
       var newEntity = new T();
-      if (options.CustomUpdate != null)
+      if (options.CustomUpdate != null) {
         newEntity = await options.CustomUpdate(newEntity, options.UpdatedObject, _tableName, _context);
+      }
 
       var updatedTypeProps = typeof(X).GetProperties().ToDictionary(p => p.Name);
       foreach (var propName in options.PropertiesToUpdate) {
@@ -116,6 +128,9 @@ namespace AlamandaApi.Services.CRUD {
         await _context.SaveChangesAsync();
       } catch (DbUpdateException dbEx) when (dbEx.InnerException != null) {
         ErrorHandler.GetFriendlyError(dbEx.InnerException as PostgresException);
+      }
+      if (options.AfterAll != null) {
+        await options.AfterAll(newEntity, options.UpdatedObject, _tableName, _context);
       }
       ClearCache();
       return newEntity;
