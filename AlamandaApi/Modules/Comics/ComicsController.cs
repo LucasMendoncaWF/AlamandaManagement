@@ -67,7 +67,7 @@ namespace AlamandaApi.Services.Comics {
     [HttpGet("fields")]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> getFields() {
-      var ignoreFields = new[] { "teammembers", "cart" };
+      var ignoreFields = new[] { "teammembers", "cart", "users" };
       try {
         var result = await _fieldSchemaService.GetFieldTypes("Comics");
         result.RemoveAll(item => ignoreFields.Contains(item.FieldName?.ToLower()));

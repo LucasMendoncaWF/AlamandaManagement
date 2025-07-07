@@ -138,6 +138,14 @@ namespace AlamandaApi.Data {
         .HasForeignKey(tm => tm.Cover)
         .OnDelete(DeleteBehavior.SetNull);
 
+      // ___________________________ Status ___________________________
+      modelBuilder.Entity<StatusModelTranslation>().ToTable("StatusTranslations");
+      modelBuilder.Entity<ComicModel>()
+        .HasOne(tm => tm.StatusModel)
+        .WithMany()
+        .HasForeignKey(tm => tm.Status)
+        .OnDelete(DeleteBehavior.SetNull);
+
       // ___________________________ COMIC ___________________________
       modelBuilder.Entity<ComicTranslationsModel>().ToTable("ComicsTranslations");
       modelBuilder.Entity<ComicModel>()

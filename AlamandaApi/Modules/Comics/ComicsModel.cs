@@ -10,12 +10,19 @@ namespace AlamandaApi.Services.Comics {
     public virtual ICollection<TeamMemberModel> TeamMembers { get; set; } = new List<TeamMemberModel>();
     [NotMapped]
     public List<int> CategoriesIds { get; set; } = new List<int>();
+
     [ForeignKey("Color")]
     public int? Color { get; set; }
     public virtual ColorModel? ColorModel { get; set; }
+    
     [ForeignKey("Cover")]
     public int? Cover { get; set; }
     public virtual CoverModel? CoverModel { get; set; }
+
+    [ForeignKey("Status")]
+    public int? Status { get; set; }
+    public virtual StatusModel? StatusModel { get; set; }
+
     public int? Available_Storage { get; set; }
     public int? Total_Pages { get; set; }
     public DateTime? Publish_Date { get; set; }
@@ -44,10 +51,10 @@ namespace AlamandaApi.Services.Comics {
     public string? Description { get; set; } = null!;
     public string? Amazon { get; set; } = null!;
     public string? Catarse { get; set; } = null!;
-    public float? Price { get; set; }
-    public int? Discount { get; set; }
+    public float? Price { get; set; } = 0;
+    public int? Discount { get; set; } = 0;
   }
-  
+
   // _________________ RESPONSES __________________________________
 
   public class ComicListModel {
@@ -59,6 +66,8 @@ namespace AlamandaApi.Services.Comics {
     public int? Color { get; set; }
     [ForeignKey("Cover")]
     public int? Cover { get; set; }
+    [ForeignKey("Status")]
+    public int? Status { get; set; }
     public virtual ICollection<CategoryModel>? Categories { get; set; } = new List<CategoryModel>();
     public virtual ICollection<TeamMemberModel>? TeamMembers { get; set; } = new List<TeamMemberModel>();
     public virtual ICollection<ComicTranslationsModel>? Translations { get; set; } = new List<ComicTranslationsModel>();
@@ -109,6 +118,31 @@ namespace AlamandaApi.Services.Comics {
 
     [ForeignKey("CoverId")]
     public virtual CoverModel? Cover { get; set; } = null!;
+
+    [ForeignKey("LanguageId")]
+    public virtual LanguageModel? Language { get; set; } = null!;
+
+    public string Name { get; set; } = null!;
+  }
+  
+  //__________________ STATUS ______________________________________
+
+  public class StatusModel {
+    [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public int Id { get; set; }
+    public StatusModelTranslation Translations { get; set; } = new();
+
+  }
+
+  public class StatusModelTranslation {
+    public int Id { get; set; }
+
+    public int StatusId { get; set; }
+    public int LanguageId { get; set; }
+
+    [ForeignKey("StatusId")]
+    public virtual StatusModel? Status { get; set; } = null!;
 
     [ForeignKey("LanguageId")]
     public virtual LanguageModel? Language { get; set; } = null!;

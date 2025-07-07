@@ -16,7 +16,7 @@ namespace AlamandaApi.Services.Comics {
       var result = await _crudService.CreateEntityAsync(
         new UpdateEntityOptions<ComicModel, ComicModel> {
           UpdatedObject = comic,
-          PropertiesToUpdate = ["Color", "Cover", "Total_Pages", "Available_Storage", "Publish_Date"],
+          PropertiesToUpdate = ["Color", "Cover", "Status", "Total_Pages", "Available_Storage", "Publish_Date"],
           Include = q => q.Include(m => m.Categories),
           CustomUpdate = async (entity, updated, tableName, context) => {
             var categoriesIds = updated.CategoriesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
@@ -57,7 +57,7 @@ namespace AlamandaApi.Services.Comics {
       var result = await _crudService.UpdateEntityAsync(
         new UpdateEntityOptions<ComicModel, ComicModel> {
           UpdatedObject = comic,
-          PropertiesToUpdate = ["Color", "Cover", "Total_Pages", "Available_Storage", "Publish_Date"],
+          PropertiesToUpdate = ["Color", "Cover", "Status", "Total_Pages", "Available_Storage", "Publish_Date"],
           Include = q => q.Include(m => m.Categories),
           CustomUpdate = async (existing, updated, tableName, context) => {
             var categoriesIds = updated.CategoriesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
@@ -118,6 +118,7 @@ namespace AlamandaApi.Services.Comics {
           Cover = u.Cover,
           Publish_Date = u.Publish_Date,
           Total_Pages = u.Total_Pages,
+          Status = u.Status,
           Name = u.Translations
             .Where(t => t.LanguageId == 1)
             .Select(t => t.Name)

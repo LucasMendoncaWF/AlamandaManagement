@@ -69,6 +69,7 @@ namespace AlamandaApi.Services.User {
     public async Task<IActionResult> getFields() {
       try {
         var result = await _fieldSchemaService.GetFieldTypes("Users", new List<string> { "Password", "RefreshToken" });
+        result.RemoveAll(item => item.FieldName.ToLower() == "comics");
         return Ok(result);
       }
       catch {

@@ -24,6 +24,7 @@
   }
 
   .translation {
+    width: 100%;
     .translation-button {
       all: unset;
       border-bottom: 0;
@@ -65,6 +66,7 @@
 
     .translation-collapse {
       transition: 0.4s;
+      width: 100%;
     }
 
     .hidden {

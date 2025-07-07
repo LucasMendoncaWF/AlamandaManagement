@@ -392,7 +392,7 @@ namespace AlamandaApi.Services.FieldsSchema {
     }
     
     private string ToSingular(string tableName) {
-      if (string.IsNullOrEmpty(tableName))
+      if (string.IsNullOrEmpty(tableName) || tableName == "Status")
         return tableName;
 
       if (tableName.EndsWith("ies", StringComparison.OrdinalIgnoreCase)) {
