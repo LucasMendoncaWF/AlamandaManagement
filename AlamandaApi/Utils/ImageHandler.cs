@@ -34,7 +34,7 @@ public static class ImageHandler {
       if (options.MaxKb.HasValue) {
         var maxBytes = options.MaxKb.Value * 1024;
         if (imageBytes.Length > maxBytes) {
-          throw new InvalidOperationException($"Image exceeds the {options.MaxKb}KB size.");
+          throw new Exception($"Image exceeds the {options.MaxKb}KB size.");
         }
       }
 
