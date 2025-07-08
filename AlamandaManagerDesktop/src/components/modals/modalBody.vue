@@ -36,7 +36,7 @@
     width?: string;
   }
 
-  withDefaults(defineProps<Props>(), {
-    width: '80%',
-  });
+withDefaults(defineProps<Props>(), {
+  width: '80%'
+});
 </script>

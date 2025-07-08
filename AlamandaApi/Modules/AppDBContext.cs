@@ -8,6 +8,7 @@ using AlamandaApi.Services.Chapters;
 using AlamandaApi.Services.Category;
 using AlamandaApi.Services.Cart;
 using AlamandaApi.Services.Language;
+using AlamandaApi.Services.FieldsSchema;
 
 namespace AlamandaApi.Data {
   public class AppDbContext : DbContext {
@@ -30,6 +31,7 @@ namespace AlamandaApi.Data {
       public List<T> Items { get; set; } = [];
       public int TotalPages { get; set; }
       public int CurrentPage { get; set; }
+      public List<FieldInfo> Fields { get; set; } = [];
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
@@ -68,6 +70,7 @@ namespace AlamandaApi.Data {
         .HasForeignKey(tm => tm.PermissionId)
         .OnDelete(DeleteBehavior.SetNull);
 
+      // ___________________________ CART ___________________________
       modelBuilder.Entity<UserModel>()
           .HasOne(u => u.Cart)
           .WithOne(c => c.User)
@@ -122,7 +125,7 @@ namespace AlamandaApi.Data {
         .HasIndex(t => new { t.RoleId, t.LanguageId })
         .IsUnique();
 
-      // ___________________________ Colors ___________________________
+      // ___________________________ COLORS ___________________________
       modelBuilder.Entity<ColorModelTranslation>().ToTable("ColorTypeTranslations");
       modelBuilder.Entity<ComicModel>()
         .HasOne(tm => tm.ColorModel)
@@ -138,7 +141,7 @@ namespace AlamandaApi.Data {
         .HasForeignKey(tm => tm.Cover)
         .OnDelete(DeleteBehavior.SetNull);
 
-      // ___________________________ Status ___________________________
+      // ___________________________ STATUS ___________________________
       modelBuilder.Entity<StatusModelTranslation>().ToTable("StatusTranslations");
       modelBuilder.Entity<ComicModel>()
         .HasOne(tm => tm.StatusModel)

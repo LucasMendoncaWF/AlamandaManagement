@@ -51,42 +51,42 @@ import urls from '@/router/urls';
     url: string;
     image: string;
   }
-  const icons: IconModel[] = [
-    {
-      label: 'Orders',
-      url: urls.home,
-      image: new URL('@/assets/icons/icon_orders.svg', import.meta.url).href
-    },
-    {
-      label: 'Comics',
-      url: urls.comics,
-      image: new URL('@/assets/icons/icon_library.svg', import.meta.url).href
-    },
-    {
-      label: 'Genre',
-      url: urls.categories,
-      image: new URL('@/assets/icons/icon_category.svg', import.meta.url).href
-    },
-    {
-      label: 'Users',
-      url: urls.users,
-      image: new URL('@/assets/icons/icon_users.svg', import.meta.url).href
-    },
-    {
-      label: 'Team',
-      url: urls.team,
-      image: new URL('@/assets/icons/icon_team.svg', import.meta.url).href
-    },
-    {
-      label: 'Arts',
-      url: urls.arts,
-      image: new URL('@/assets/icons/icon_art.svg', import.meta.url).href
-    },
-    {
-      label: 'Roles',
-      url: urls.roles,
-      image: new URL('@/assets/icons/icon_roles.svg', import.meta.url).href
-    }
-  ];
+const icons: IconModel[] = [
+  {
+    label: 'Orders',
+    url: urls.home,
+    image: new URL('@/assets/icons/icon_orders.svg', import.meta.url).href
+  },
+  {
+    label: 'Comics',
+    url: urls.comics,
+    image: new URL('@/assets/icons/icon_library.svg', import.meta.url).href
+  },
+  {
+    label: 'Genre',
+    url: urls.categories,
+    image: new URL('@/assets/icons/icon_category.svg', import.meta.url).href
+  },
+  {
+    label: 'Users',
+    url: urls.users,
+    image: new URL('@/assets/icons/icon_users.svg', import.meta.url).href
+  },
+  {
+    label: 'Team',
+    url: urls.team,
+    image: new URL('@/assets/icons/icon_team.svg', import.meta.url).href
+  },
+  {
+    label: 'Arts',
+    url: urls.arts,
+    image: new URL('@/assets/icons/icon_art.svg', import.meta.url).href
+  },
+  {
+    label: 'Roles',
+    url: urls.roles,
+    image: new URL('@/assets/icons/icon_roles.svg', import.meta.url).href
+  }
+];
 
 </script>

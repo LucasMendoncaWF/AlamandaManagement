@@ -6,7 +6,7 @@ const urls = {
   team: '/team',
   users: '/users',
   roles: '/roles',
-  categories: '/categories',
+  categories: '/categories'
 }
 
 export default urls;

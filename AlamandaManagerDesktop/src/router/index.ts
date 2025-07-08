@@ -4,48 +4,48 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.login,
     name: 'login',
-    component: () => import('@/sections/loginPage.vue'),
+    component: () => import('@/sections/loginPage.vue')
   },
   {
     path: urls.home,
     name: 'home',
-    component: () => import('@/sections/ordersPage.vue'),
+    component: () => import('@/sections/ordersPage.vue')
   },
   {
     path: urls.users,
     name: 'users',
-    component: () => import('@/sections/usersPage.vue'),
+    component: () => import('@/sections/usersPage.vue')
   },
   {
     path: urls.team,
     name: 'team',
-    component: () => import('@/sections/teamPage.vue'),
+    component: () => import('@/sections/teamPage.vue')
   },
   {
     path: urls.arts,
     name: 'arts',
-    component: () => import('@/sections/artsPage.vue'),
+    component: () => import('@/sections/artsPage.vue')
   },
   {
     path: urls.roles,
     name: 'roles',
-    component: () => import('@/sections/rolesPage.vue'),
+    component: () => import('@/sections/rolesPage.vue')
   },
   {
     path: urls.comics,
     name: 'comics',
-    component: () => import('@/sections/comics/comicsPage.vue'),
+    component: () => import('@/sections/comics/comicsPage.vue')
   },
   {
     path: urls.categories,
     name: 'categories',
-    component: () => import('@/sections/categoriesPage.vue'),
-  },
+    component: () => import('@/sections/categoriesPage.vue')
+  }
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 });
 
 router.beforeEach((to, _from, next) => {

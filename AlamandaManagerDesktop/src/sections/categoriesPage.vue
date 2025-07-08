@@ -4,7 +4,6 @@
     label="category"
     :showFieldsOnTable="['name']"
     :searchFunction="getCategories"
-    :getFieldFunction="getCategoriesFields"
     :addItemFunction="addCategory"
     :updateItemFunction="updateCategory"
     :deleteFunction="deleteCategory"
@@ -12,6 +11,6 @@
 </template>
 
 <script lang="ts" setup>
-  import { addCategory, deleteCategory, getCategoriesFields, updateCategory, getCategories} from '@/api/category';
-  import List from '@/components/list/list.vue';
+import { addCategory, deleteCategory, updateCategory, getCategories } from '@/api/category';
+import List from '@/components/lists/list.vue';
 </script>

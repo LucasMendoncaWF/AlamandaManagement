@@ -14,11 +14,11 @@ const createWindow = async () => {
     minHeight: 600,
     autoHideMenuBar: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-    },
+      preload: path.join(__dirname, 'preload.js')
+    }
   });
 
-   if (isDev) {
+  if (isDev) {
     await mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
   } else {

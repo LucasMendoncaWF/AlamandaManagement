@@ -1,4 +1,4 @@
-import { restApi } from "./defaultApi";
+import { restApi } from './defaultApi';
 
 export interface LoginRequest {
   email: string;
@@ -11,5 +11,5 @@ export interface LoginResponse {
 }
 
 export function userLogIn(body: LoginRequest) {
-  return restApi<LoginResponse>({url: 'auth/admin', method: 'POST', body});
+  return restApi<LoginResponse>({ url: 'auth/admin', method: 'POST', body });
 }

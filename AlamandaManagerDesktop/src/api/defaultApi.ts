@@ -1,4 +1,4 @@
-import { FormFieldOptionModel } from "@/models/formFieldModel";
+import { FormFieldModel, FormFieldOptionModel } from '@/models/formFieldModel';
 
 const API_URL = import.meta.env.VITE_API_URL;
 type Method = 'POST' | 'GET' | 'PUT' | 'DELETE';
@@ -21,16 +21,13 @@ export interface ListResponse<T extends ApiResponseData>{
   items: Array<T>;
   totalPages: number;
   currentPage: number;
+  fields: FormFieldModel[];
 }
-
-export type SortDirection = 'descending' | 'ascending';
 
 export interface QueryParams {
   id?: number;
   page?: number;
   queryString?: string;
-  sortDirection?: SortDirection;
-  sortBy?: string | null;
 }
 
 async function refreshAccessToken() {
@@ -38,14 +35,14 @@ async function refreshAccessToken() {
   const response = await fetch(`${API_URL}/auth/refresh`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
+    body: JSON.stringify({ refreshToken })
   });
 
   if (!response.ok) {
     await fetch(`${API_URL}/auth/logout`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
+      body: JSON.stringify({ refreshToken })
     });
     throw new Error('Failed to refresh token');
   }
@@ -62,33 +59,33 @@ async function refreshAccessToken() {
 
 const fetchApi = ({ url, method = 'GET', body, params, headers }: RestRequest) => {
   const queryParams = params
-  ? '?' + new URLSearchParams(
+    ? '?' + new URLSearchParams(
       Object.entries(params).reduce((acc, [key, value]) => {
         acc[key] = String(value);
         return acc;
       }, {} as Record<string, string>)
     ).toString()
-  : '';
+    : '';
 
   return fetch(`${API_URL}/${url}${queryParams}`, {
     method,
     headers,
-    body: method !== 'GET' ? JSON.stringify(body) : undefined,
+    body: method !== 'GET' ? JSON.stringify(body) : undefined
   });
 }
 
 export class ApiError extends Error {
   constructor(public message: string) {
     super(message);
-    this.name = "ApiError";
+    this.name = 'ApiError';
   }
 }
 
 export async function restApi<T>(request: RestRequest): Promise<T> {
   const token = localStorage.getItem('token');
-  let headers = {
+  const headers = {
     'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json',
+    'Content-Type': 'application/json'
   };
 
   let response = await fetchApi({ ...request, headers });
@@ -99,7 +96,7 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
 
       const headers = {
         'Authorization': `Bearer ${newToken}`,
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       };
       response = await fetchApi({ ...request, headers });
     } catch (error) {
@@ -125,7 +122,7 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
           }
         } else {
           const errorText = await response.text();
-          if (errorText) errorMessage = errorText;
+          if (errorText) {errorMessage = errorText;}
         }
       }
     } catch {
@@ -144,7 +141,7 @@ interface ErrorMessage {
 }
 
 export function getErrorMessage(error: unknown): string {
-  if (typeof error === 'string') return error;
-  if (error && typeof (error as ErrorMessage).message === 'string') return (error as ErrorMessage).message;
+  if (typeof error === 'string') {return error;}
+  if (error && typeof (error as ErrorMessage).message === 'string') {return (error as ErrorMessage).message;}
   return 'Unknown error';
 }
