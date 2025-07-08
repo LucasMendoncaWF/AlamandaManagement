@@ -47,7 +47,7 @@ namespace AlamandaApi.Services.Comics {
     [ForeignKey("LanguageId")]
     public virtual LanguageModel? Language { get; set; } = null!;
 
-    public List<string>? Pictures { get; set; } = new List<string>();
+    public List<string?>? Pictures { get; set; } = new List<string?>();
     public string Name { get; set; } = null!;
     public string? Description { get; set; } = null!;
     public string? Amazon { get; set; } = null!;

@@ -32,6 +32,11 @@ namespace AlamandaApi.Services.Comics {
             context.Entry(entity).Collection(e => e.Translations).Load();
             var translationsDict = updated.Translations ?? new List<ComicTranslationsModel>();
             foreach (var lang in translationsDict) {
+              List<string?>? pictures = null;
+              pictures = await ImageHandler.SaveImages(
+                createImageType(lang, tableName),
+                lang.Pictures
+              );
               var langId = lang.LanguageId;
               var translation = new ComicTranslationsModel {
                 ComicId = entity.Id,
@@ -41,7 +46,8 @@ namespace AlamandaApi.Services.Comics {
                 Catarse = lang.Catarse,
                 Description = lang.Description,
                 Discount = lang.Discount ?? 0,
-                Price = lang.Price ?? 0
+                Price = lang.Price ?? 0,
+                Pictures = pictures,
               };
               context.Set<ComicTranslationsModel>().Add(translation);
             }
@@ -61,6 +67,7 @@ namespace AlamandaApi.Services.Comics {
           Include = q => q.Include(m => m.Categories),
           CustomUpdate = async (existing, updated, tableName, context) => {
             var categoriesIds = updated.CategoriesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
+
             await _crudService.SyncManyToManyRelation(
               currentCollection: existing.Categories,
               newIds: categoriesIds,
@@ -70,18 +77,26 @@ namespace AlamandaApi.Services.Comics {
             context.Entry(existing).Collection(e => e.Translations).Load();
             var translationsDict = updated.Translations ?? new List<ComicTranslationsModel>();
             foreach (var lang in translationsDict) {
+              if (lang == null) { continue; }
               var langId = lang.LanguageId;
               var existingTranslation = existing.Translations
                   .FirstOrDefault(t => t.LanguageId == langId);
+              List<string?>? pictures = null;
+                pictures = await ImageHandler.SaveImages(
+                  createImageType(lang, tableName),
+                  lang.Pictures,
+                  existingTranslation?.Pictures
+                );
               var newTranslation = new ComicTranslationsModel {
                 ComicId = existing.Id,
                 LanguageId = langId,
                 Name = lang.Name,
                 Amazon = lang.Amazon,
                 Catarse = lang.Catarse,
-                Description = lang.Description, 
+                Description = lang.Description,
                 Discount = lang.Discount ?? 0,
-                Price = lang.Price ?? 0
+                Price = lang.Price ?? 0,
+                Pictures = pictures,
               };
 
               if (existingTranslation == null) {
@@ -94,8 +109,10 @@ namespace AlamandaApi.Services.Comics {
                 existingTranslation.Description = newTranslation.Description;
                 existingTranslation.Discount = newTranslation.Discount ?? 0;
                 existingTranslation.Price = newTranslation.Price ?? 0;
+                existingTranslation.Pictures = newTranslation.Pictures ?? null;
               }
             }
+
             await context.SaveChangesAsync();
             return existing;
           },
@@ -103,9 +120,9 @@ namespace AlamandaApi.Services.Comics {
       );
       return result;
     }
-    
-    public async Task Delete(int Id) {
-      await _crudService.DeleteByIdAsync(Id);
+
+    public async Task Delete(int id) {
+      await _crudService.DeleteWithMultipleImages(id);
     }
 
     public async Task<PagedResult<ComicListModel>> GetAll(ListQueryParams query) {
@@ -152,14 +169,14 @@ namespace AlamandaApi.Services.Comics {
       return await _crudService.GetByPropertyAsync("Id", id);
     }
 
-    /*public ImageHandler.ImageSaveOptions CreateImage(ComicModel existing, string folderName) {
+    private ImageHandler.ImageSaveOptions createImageType(ComicTranslationsModel updated, string tableName) {
       return new ImageHandler.ImageSaveOptions {
-        Name = existing.Id.ToString(),
-        Folder = folderName,
+        Name = updated.LanguageId.ToString() ?? "0",
+        Folder = tableName,
         Quality = 60,
         MaxWidth = 200,
-        PreviousImage = existing.Picture
+        MaxKb = 2000,
       };
-    }*/
+    }
   }
 }

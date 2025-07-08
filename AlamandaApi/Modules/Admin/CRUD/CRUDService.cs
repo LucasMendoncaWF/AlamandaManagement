@@ -56,9 +56,10 @@ namespace AlamandaApi.Services.CRUD {
         .Select(options.Selector)
         .ToListAsync();
       var Fields = await _fieldSchemaService.GetFieldTypes(_tableName);
+      var ignoreFields = options.IgnoreFields ?? new List<string>();
       Fields.RemoveAll(item =>
-        item.FieldName != null &&
-        options.IgnoreFields.Contains(item.FieldName.ToLower())
+        !string.IsNullOrEmpty(item.FieldName) &&
+        ignoreFields.Contains(item.FieldName.ToLower())
       );
       var result = new PagedResult<TResult> {
         Items = items,
@@ -80,7 +81,6 @@ namespace AlamandaApi.Services.CRUD {
 
     public async Task<T?> GetByPropertyAsync(string propName, object value) {
       var key = HashCacheKey($"{_tableName}_GetBy_{propName}_{value?.ToString() ?? "null"}");
-
       if (_memoryCache.TryGetValue(key, out T? cached))
         return cached;
 
@@ -178,6 +178,53 @@ namespace AlamandaApi.Services.CRUD {
       dbSet.Remove(entity);
       await _context.SaveChangesAsync();
       ClearCache();
+    }
+
+    public async Task DeleteWithImage(object id) {
+      T? entity = await _context.Set<T>().FindAsync(id);
+      if (entity == null) {
+        throw new KeyNotFoundException("Not found");
+      }
+
+      var pictureProperty = entity.GetType().GetProperty("Picture");
+      if (pictureProperty != null) {
+        var pictureValue = pictureProperty.GetValue(entity) as string;
+        if (!string.IsNullOrEmpty(pictureValue)) {
+          ImageHandler.DeleteImage(_tableName, pictureValue);
+        }
+      }
+
+      await DeleteByIdAsync(id);
+    }
+
+    public async Task DeleteWithMultipleImages(object id) {
+      T? entity = await _context.Set<T>().FindAsync(id);
+      if (entity == null)
+        throw new KeyNotFoundException("Not found");
+
+      var translationsProp = typeof(T).GetProperty("Translations");
+      if (translationsProp == null) {
+        throw new InvalidOperationException("A entidade não possui a propriedade 'Translations'.");
+      }
+
+      _context.Entry(entity).Collection(translationsProp.Name).Load();
+
+      var translations = translationsProp.GetValue(entity) as IEnumerable<object>;
+      if (translations == null) return;
+
+      foreach (var translation in translations) {
+        if (translation == null) { continue; }
+        var picturesProp = translation.GetType().GetProperty("Pictures");
+        if (picturesProp == null) { continue; }
+        var pictures = picturesProp.GetValue(translation) as IEnumerable<string?>;
+        if (pictures != null) {
+          foreach (string? picture in pictures) {
+            ImageHandler.DeleteImage(_tableName, picture);
+          }
+        }
+      }
+
+      await DeleteByIdAsync(id);
     }
 
     public async Task SyncManyToManyRelation<TJoin, TKey>(

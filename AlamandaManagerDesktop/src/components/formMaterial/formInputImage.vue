@@ -147,13 +147,19 @@ const emit = defineEmits<{
   }>();
 
 const onClickUpload = () => {
-  fileInput.value?.click();
+  if (fileInput.value) {
+    fileInput.value.type = 'text';
+    fileInput.value.type = 'file';
+    fileInput.value.click();
+  }
 }
 
 const onDeleteImage = () => {
   props.onRemoveImage(props.id);
+  fileName.value = '';
   previewFile.value = null;
   fileInput.value = null;
+  emit('update:modelValue', null);
 }
 
 const onImageError = () => {

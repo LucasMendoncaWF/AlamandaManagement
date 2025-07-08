@@ -323,7 +323,6 @@ namespace AlamandaApi.Services.FieldsSchema {
     }
 
     private static FieldDataType InferType(string name, string sqlType, bool isForeignKey, bool isJunction) {
-      Console.WriteLine(name);
       if (isForeignKey) return isJunction ? FieldDataType.OptionsArray : FieldDataType.Options;
       if (name.Contains("pictures")) return FieldDataType.ImageArray;
       if (name.Contains("picture")) return FieldDataType.Image;

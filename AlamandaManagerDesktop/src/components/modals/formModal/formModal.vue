@@ -212,6 +212,7 @@ const imageField = reactive<Record<string, string | null>>({});
 const isLoading = ref(false);
 const showTranslations = ref('PT');
 const errorMessage = ref<string | null>(null);
+const maxSize = props.maxImageSize || 500;
 
 const onToggleTranslationFields = (value: string) => {
   if(value === showTranslations.value) {
@@ -229,21 +230,10 @@ const onSubmit = async () => {
   errorMessage.value = null;
   if (!props.fields) { return; }
 
-  const maxSize = props.maxImageSize || 400;
-
   for (const f of props.fields) {
     const val = form[f.fieldName];
-    if (
-      f.dataType === FieldDataTypeEnum.Image ||
-      f.dataType === FieldDataTypeEnum.ImageArray
-    ) {
-      const files = Array.isArray(val) ? val : [val];
-      for (const file of files) {
-        if (file && file instanceof File && file.size / (1024 * 1024) > maxSize / 100) {
-          errorMessage.value = `The max size for pictures is ${maxSize}KB`;
-          return;
-        }
-      }
+    if(!isImagesSizeCorrect(f, val)) {
+      return;
     }
   }
 
@@ -279,7 +269,24 @@ const onSubmit = async () => {
 
           for (const tf of group.fields) {
             const key = `translations_${group.languageId}_${tf.fieldName}`;
-            translationItem[tf.fieldName] = !!form[key] ? form[key] : null;
+            if(!isImagesSizeCorrect(tf, form[key])) {
+              return;
+            }
+            if(tf.dataType === FieldDataTypeEnum.ImageArray) {
+              const arrBase64: string[] = [];
+              if(form[key]) {
+                for (const file of form[key] as (string | File)[]) {
+                  if(typeof file === 'string') {
+                    arrBase64.push(file);
+                  } else if (file) { 
+                    arrBase64.push(await fileToBase64(file));
+                  }
+                }
+              }
+              translationItem[tf.fieldName] = arrBase64.length ? arrBase64 : null;
+            } else {
+              translationItem[tf.fieldName] = form[key] ?? null;
+            }
           }
 
           translations.push(translationItem);
@@ -290,10 +297,9 @@ const onSubmit = async () => {
         
         sendData[f.fieldName] = convertDate(form[f.fieldName]) as ResponseKeyType;
       } else {
-        sendData[f.fieldName] = (!!form[f.fieldName] ? form[f.fieldName] : null) as ResponseKeyType;
+        sendData[f.fieldName] = form[f.fieldName] as ResponseKeyType;
       }
     }
-
     if (props.data?.id) {
       await props.updateItemFunction({ ...sendData, id: props.data.id } as TForm);
     } else {
@@ -310,6 +316,22 @@ const onSubmit = async () => {
     isLoading.value = false;
   }
 };
+
+const isImagesSizeCorrect = (field: FormFieldModel, value?: FieldType) => {
+  if (
+    field.dataType === FieldDataTypeEnum.Image ||
+      field.dataType === FieldDataTypeEnum.ImageArray
+  ) {
+    const files = Array.isArray(value) ? value : [value];
+    for (const file of files) {
+      if (file && file instanceof File && file.size / (1024 * 1024) > maxSize / 1000) {
+        errorMessage.value = `The max size for pictures is ${maxSize}KB`;
+        return false;
+      }
+    }
+  }
+  return true;
+}
 
 const convertDate = (value: FieldType): string | null => {
   if (!value || typeof value !== 'string') {

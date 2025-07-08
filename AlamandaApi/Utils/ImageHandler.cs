@@ -11,18 +11,14 @@ public static class ImageHandler {
     public int Quality { get; set; } = 75;
     public int MaxWidth { get; set; } = 1200;
     public string? PreviousImage { get; set; } = null;
+    public int? MaxKb { get; set; } = 500;
   }
 
   public static async Task<string?> SaveImage(string? base64Image, ImageSaveOptions options) {
     var folder = options.Folder.Replace("Model", "");
     if (!string.IsNullOrEmpty(base64Image) && base64Image.StartsWith("data:image")) {
       if (!string.IsNullOrEmpty(options.PreviousImage)) {
-        var previousFileName = Path.GetFileName(options.PreviousImage);
-        var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder, previousFileName);
-
-        if (File.Exists(previousFilePath)) {
-          File.Delete(previousFilePath);
-        }
+        DeleteImage(folder, options.PreviousImage);
       }
       var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder);
       Directory.CreateDirectory(uploadsFolder);
@@ -34,6 +30,13 @@ public static class ImageHandler {
 
       using var inputStream = new MemoryStream(imageBytes);
       using var image = await Image.LoadAsync(inputStream);
+
+      if (options.MaxKb.HasValue) {
+        var maxBytes = options.MaxKb.Value * 1024;
+        if (imageBytes.Length > maxBytes) {
+          throw new InvalidOperationException($"Image exceeds the {options.MaxKb}KB size.");
+        }
+      }
 
       if (image.Width > options.MaxWidth) {
         var ratio = (float)options.MaxWidth / image.Width;
@@ -49,16 +52,60 @@ public static class ImageHandler {
       return $"{IMAGES_STORAGE}/{IMAGES_FOLDER}/{folder}/{fileName}";
     }
     else if (!string.IsNullOrEmpty(options.PreviousImage) && string.IsNullOrEmpty(base64Image)) {
-      var previousFileName = Path.GetFileName(options.PreviousImage);
-      var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder, previousFileName);
-
-      if (File.Exists(previousFilePath)) {
-        File.Delete(previousFilePath);
-      }
+      DeleteImage(folder, options.PreviousImage);
       return null;
     }
     else {
       return options.PreviousImage;
+    }
+  }
+
+  public static async Task<List<string?>?> SaveImages(
+    ImageSaveOptions baseOptions,
+    List<string?>? newImages,
+    List<string?>? previousImages = null
+  ) {
+    List<string?> newSavedImages = [];
+    if (previousImages != null) {
+      foreach (var prevImage in previousImages) {
+        if (!(newImages ?? new List<string?>()).Contains(prevImage)) {
+          DeleteImage(baseOptions.Folder, prevImage);
+        }
+      }
+    }
+
+    if (newImages == null) {
+      return null;
+    }
+
+    for (int i = 0; i < newImages?.Count; i++) {
+      string? image = newImages[i];
+      if (previousImages != null && previousImages.Contains(image)) {
+        newSavedImages.Add(image);
+        continue;
+      }
+      if (!string.IsNullOrEmpty(image) && image.StartsWith("data:image")) {
+        ImageSaveOptions options = new ImageSaveOptions {
+          Folder = baseOptions.Folder,
+          MaxWidth = baseOptions.MaxWidth,
+          Name = baseOptions.Name + "_multi_" + i
+        };
+        string? newImageUrl = await SaveImage(image, options);
+        if (newImageUrl != null) {
+          newSavedImages.Add(newImageUrl);
+        }
+      }
+    }
+    return newSavedImages;
+  }
+
+  public static void DeleteImage(string folder, string? image) {
+    var previousFileName = Path.GetFileName(image);
+    if (previousFileName != null) {
+      var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder, previousFileName);
+      if (File.Exists(previousFilePath)) {
+        File.Delete(previousFilePath);
+      }
     }
   }
 }

@@ -2,6 +2,7 @@
   @use '@/assets/variables.scss' as *;
 
   .form-upload-input {
+    margin-top: 15px;
     label {
       color: $white;
       text-transform: capitalize;
@@ -15,19 +16,16 @@
 
     .previous-image {
       position: relative;
-      max-width: 150px;
-      max-height: 150px;
       border: 2px solid $secondary;
       border-radius: 5px;
-      margin: 5px;
       padding: 8px;
-
-      img.preview {
-        width: 100%;
-        height: auto;
-        border-radius: 3px;
-        object-fit: contain;
-      }
+      background-position: center;
+      background-size: contain;
+      background-repeat: no-repeat;
+      width: calc(25% - 28px);
+      max-width: 200px;
+      height: 15vw;
+      max-height: 200px;
     }
 
     .edit-button, .delete-button {
@@ -61,8 +59,12 @@
     }
 
     .add-file {
+      display: flex;
+      justify-content: start;
       margin-top: 10px;
+      width: 100%;
       button {
+        width: calc(20% + 20px);
         background-color: $white;
         border: 2px solid $black;
         display: flex;
@@ -72,7 +74,6 @@
         border-radius: 5px;
         cursor: pointer;
         transition: 0.3ms;
-        width: 100%;
 
         &:hover {
           background-color: $black;
@@ -104,28 +105,29 @@
 
 <template>
   <div :class="`form-upload-input form-upload-input--${variant}`">
-    <label>{{ label }}</label>
+    <label>
+      {{ label }} 
+      ({{ (internalFiles?.length || 0) + '/' + (maxNumberOfFiles || defaultMaxNumberOfFiles) }})
+    </label>
 
-    <div class="images-wrapper" v-if="previewFiles.length">
-      <div
-        class="previous-image"
-        v-for="(src, index) in previewFiles"
-        :key="index"
-      >
-        <img
-          class="preview"
-          :src="src || placeholder"
-          :alt="`${label} preview ${index + 1}`"
-          @error="onImageError(index)"
-        />
-        <button type="button" class="delete-button" @click="removeImage(index)">
-          <img :src="deleteIcon" alt="delete" />
-        </button>
-      </div>
+    <div class="images-wrapper" v-if="internalFiles?.length">
+      <DragAndDrop v-model="internalFiles" v-if="internalFiles?.length">
+        <div
+          :key="getBackgroundImageUrl(src)"
+          v-for="(src, index) in internalFiles"
+          class="previous-image"
+          :style="{ backgroundImage: getBackgroundImageUrl(src) }"
+        > 
+          <button type="button" @click="() => onClickUpload(index)" class="edit-button"><img :src="editIcon" alt="edit button" /></button>
+          <button type="button" class="delete-button" @click="removeImage(index)">
+            <img :src="deleteIcon" alt="delete" />
+          </button>
+        </div>
+      </DragAndDrop>
     </div>
 
-    <div class="add-file">
-      <button type="button" @click="onClickUpload">
+    <div class="add-file" v-if="!internalFiles || (internalFiles as string[])?.length < (maxNumberOfFiles || defaultMaxNumberOfFiles)">
+      <button type="button" @click="() => onClickUpload()">
         Upload images
         <img :src="uploadIcon" alt="upload" />
       </button>
@@ -137,26 +139,35 @@
       type="file"
       multiple
       :disabled="disabled"
+      accept=""
       @change="onInput"
       :id="id"
       v-bind="attrs"
     />
   </div>
+  <ErrorMessage
+    v-if="errorMessage"
+    :message="errorMessage"
+    :onClose="onCloseErrorMessage"
+  />
 </template>
 
 <script lang="ts" setup>
 import { ref, watch, useAttrs } from 'vue';
+import ErrorMessage from '../stateHandling/errorMessage.vue';
+import DragAndDrop from '../dragAndDrop/dragAndDrop.vue';
 
-const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
+const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
 const uploadIcon = new URL('@/assets/icons/icon_upload.svg', import.meta.url).href;
 const deleteIcon = new URL('@/assets/icons/icon_delete.svg', import.meta.url).href;
 
 interface Props {
-  modelValue?: (File | string)[];
+  modelValue?: (string | File)[];
   label: string;
   id: string;
   variant?: 'inverted';
   disabled?: boolean;
+  maxNumberOfFiles?: number;
   onRemoveImage?: (index: number) => void;
 }
 const props = defineProps<Props>();
@@ -165,51 +176,73 @@ const emit = defineEmits<{
 }>();
 
 const fileInput = ref<HTMLInputElement | null>(null);
+const errorMessage = ref<string | null>(null);
+const editingImgIndex = ref<number | null>(null);
 const attrs = useAttrs();
+const defaultMaxNumberOfFiles = 5;
 
-const previewFiles = ref<(string | null)[]>([]);
+const internalFiles = ref<(string | File)[]>(props.modelValue ?? []);
 
-watch(
-  () => props.modelValue,
-  (newVal) => {
-    if (!newVal) {
-      previewFiles.value = [];
-      return;
-    }
-    previewFiles.value = newVal.map((item) => {
-      if (typeof item === 'string') {return item;}
-      else if (item instanceof File) {return URL.createObjectURL(item);}
-      else {return null;}
-    });
-  },
-  { immediate: true }
-);
+const isEqual = (a: any, b: any) => {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
 
-const onClickUpload = () => {
+watch(() => props.modelValue, (val) => {
+  if (val && !isEqual(internalFiles.value, val)) {
+    internalFiles.value = [...val];
+  }
+});
+
+watch(internalFiles, (val) => {
+  if (!isEqual(props.modelValue, val)) {
+    emit('update:modelValue', val);
+  }
+});
+
+const onClickUpload = (index?: number) => {
+  if (index !== undefined && index !== null) {
+    editingImgIndex.value = index;
+  }
   fileInput.value?.click();
 };
 
-const removeImage = (index: number) => {
-  const arr = props.modelValue ? [...props.modelValue] : [];
-  arr.splice(index, 1);
-  emit('update:modelValue', arr);
-  if (props.onRemoveImage) {props.onRemoveImage(index);}
-};
+const onCloseErrorMessage = () => {
+  errorMessage.value = null;
+}
 
-const onImageError = (index: number) => {
-  previewFiles.value[index] = placeholder;
+const removeImage = (index: number) => {
+  internalFiles.value.splice(index, 1);
+  editingImgIndex.value = null;
+  if (props.onRemoveImage) {
+    props.onRemoveImage(index);
+  }
 };
 
 const onInput = (event: Event) => {
+  if (editingImgIndex.value !== null) {
+    removeImage(editingImgIndex.value);
+  }
   const input = event.target as HTMLInputElement;
-  if (!input.files) {return;}
+  if (!input.files) {return};
+
+  const max = props.maxNumberOfFiles ?? defaultMaxNumberOfFiles;
+  if ((input.files.length + internalFiles.value.length) > max) {
+    errorMessage.value = `You can only select up to ${max} files.`;
+    input.value = '';
+    return;
+  }
 
   const newFiles = Array.from(input.files);
-
-  const current = props.modelValue ? [...props.modelValue] : [];
-  const updated = current.concat(newFiles);
-
-  emit('update:modelValue', updated);
+  internalFiles.value = internalFiles.value.concat(newFiles);
   input.value = '';
 };
+
+const getBackgroundImageUrl = (value: string | File): string => {
+  if (typeof value === 'string') {
+    return `url(${value})`;
+  } else if (value instanceof File) {
+    return `url(${URL.createObjectURL(value)})`;
+  }
+  return '';
+}
 </script>

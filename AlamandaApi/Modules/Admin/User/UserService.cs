@@ -38,7 +38,7 @@ namespace AlamandaApi.Services.User {
     }
 
     public async Task Delete(int Id) {
-      await _crudService.DeleteByIdAsync(Id);
+      await _crudService.DeleteWithImage(Id);
     }
 
     public async Task<PagedResult<UserListView>> GetAll(ListQueryParams query) {

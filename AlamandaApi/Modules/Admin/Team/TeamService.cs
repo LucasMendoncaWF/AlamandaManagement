@@ -71,7 +71,7 @@ namespace AlamandaApi.Services.Team {
     }
     
     public async Task Delete(int Id) {
-      await _crudService.DeleteByIdAsync(Id);
+      await _crudService.DeleteWithImage(Id);
     }
 
     public async Task<PagedResult<TeamMemberListModel>> GetAll(ListQueryParams query) {

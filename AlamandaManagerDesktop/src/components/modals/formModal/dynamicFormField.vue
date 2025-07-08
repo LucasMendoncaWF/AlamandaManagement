@@ -16,6 +16,10 @@
       }
     }
 
+    &--multiple-images {
+      width: 100%;
+    }
+
     &--textarea {
       width: 100%;
     }
@@ -85,6 +89,19 @@
     </div>
   </div>
 
+  <div class="form-input-box--multiple-images" v-else-if="field.dataType === FieldDataTypeEnum.ImageArray">
+    <div class="image-input-box">
+      <FormMultipleImages
+        :id="field.fieldName"
+        :label="field.fieldName"
+        :previousImage="imageField[field.fieldName]"
+        :disabled="isLoading"
+        variant="inverted"
+        v-model="internalValue as (string | File)[]"
+      />
+    </div>
+  </div>
+
   <div class="form-input-box--textarea" v-else-if="field.dataType === FieldDataTypeEnum.TextArea">
     <FormTextArea
       :id="field.fieldName"
@@ -100,6 +117,7 @@
 import FormCheckBox from '@/components/formMaterial/formCheckBox.vue';
 import FormInput from '@/components/formMaterial/formInput.vue';
 import FormInputImage from '@/components/formMaterial/formInputImage.vue';
+import FormMultipleImages from '@/components/formMaterial/formMultipleImages.vue';
 import FormMultipleSelect from '@/components/formMaterial/formMultipleSelect.vue';
 import FormSelect from '@/components/formMaterial/formSelect.vue';
 import FormTextArea from '@/components/formMaterial/formTextArea.vue';
@@ -134,12 +152,24 @@ import { watch, ref } from 'vue';
 
 const internalValue = ref(props.modelValue);
 
+const isEqual = (a: any, b: any) => {
+  if (a === b) { return true; }
+  if (a instanceof File && b instanceof File) {
+    return a.name === b.name && a.size === b.size && a.type === b.type;
+  }
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
 watch(() => props.modelValue, (val) => {
-  internalValue.value = val;
+  if (!isEqual(val, internalValue.value)) {
+    internalValue.value = val;
+  }
 });
 
 watch(() => internalValue.value, (val) => {
-  emit('update:modelValue', val as FieldType);
+  if (!isEqual(val, props.modelValue)) {
+    emit('update:modelValue', val as FieldType);
+  }
 });
 
 const emit = defineEmits<{

@@ -38,7 +38,7 @@ namespace AlamandaApi.Services.Art {
     }
 
     public async Task Delete(int Id) {
-      await _crudService.DeleteByIdAsync(Id);
+      await _crudService.DeleteWithImage(Id);
     }
 
     public async Task<PagedResult<ArtModel>> GetAll(ListQueryParams query) {
@@ -63,7 +63,8 @@ namespace AlamandaApi.Services.Art {
         Folder = tableName,
         Quality = 60,
         MaxWidth = 600,
-        PreviousImage = existing.Picture
+        PreviousImage = existing.Picture,
+        MaxKb = 1000,
       };
     }
   }
