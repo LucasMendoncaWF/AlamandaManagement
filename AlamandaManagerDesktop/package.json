@@ -2,7 +2,6 @@
   "name": "alamandamanagerdesktop",
   "productName": "alamandamanagerdesktop",
   "version": "1.0.0",
-  "type": "module",
   "description": "My Electron application description",
   "main": "dist/alamandamanagerdesktop.js",
   "scripts": {

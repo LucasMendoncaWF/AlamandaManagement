@@ -84,6 +84,7 @@ const editIcon = new URL('@/assets/icons/icon_edit.svg', import.meta.url).href;
 const chaptersIcon = new URL('@/assets/icons/icon_chapters.svg', import.meta.url).href;
 const placeholder = new URL('@/assets/images/placeholder.webp', import.meta.url).href;
 import { ApiResponseData, ResponseKeyType } from '@/api/defaultApi';
+import { formatDateWithoutTime } from '@/utis/converter';
 
   interface ViewObject {
     name: string;
@@ -135,8 +136,16 @@ function getValue(value: ViewObject | ViewObject[]): string {
   } 
   else if (value && typeof value === 'object') {
     return value.name ?? '';
+  } else if (typeof value === 'string' && isValidDateString(value)) {
+    return formatDateWithoutTime(value);
   }
   return String(value ?? '');
+}
+
+function isValidDateString(str: string): boolean {
+  const pattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/;
+  const date = pattern.test(str) && new Date(str);
+  return date && !isNaN(date.getTime());
 }
 
 const showFields = computed(() => {

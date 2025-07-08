@@ -141,7 +141,8 @@ namespace AlamandaApi.Services.Comics {
             Discount = r.Discount,
             Price = r.Price,
             LanguageId = r.LanguageId,
-            ComicId = r.ComicId
+            ComicId = r.ComicId,
+            Pictures = r.Pictures,
           }).ToList(),
         }
       });

@@ -54,7 +54,7 @@ namespace AlamandaApi.Services.FieldsSchema {
       _context = context;
     }
 
-    public async Task<List<FieldInfo>> GetFieldTypes(string tableName, List<string>? excludedFields = null) {
+    public async Task<List<FieldInfo>> GetFieldTypes(string tableName, List<string>? excludedFields = null, int? maxPicturesSize = null) {
       var fields = new List<FieldInfo>();
       var foreignKeys = new Dictionary<string, string>();
       var foundJunctions = new Dictionary<string, string>();
@@ -65,14 +65,13 @@ namespace AlamandaApi.Services.FieldsSchema {
       await LoadJunctionTables(conn, tableName, foundJunctions);
 
       var junctionTables = new HashSet<string>(foundJunctions.Keys.Select(k => k.ToLower()));
-
       await LoadColumns(conn, tableName, excludedFields, fields, foreignKeys, junctionTables);
 
       await LoadOptionsForForeignKeys(fields, foreignKeys);
 
       await LoadJunctionForeignKeyOptions(conn, foundJunctions, tableName, fields);
 
-      await LoadTranslationFields(tableName, conn, fields);
+      await LoadTranslationFields(tableName, conn, fields, maxPicturesSize);
 
       return fields;
     }
@@ -126,7 +125,6 @@ namespace AlamandaApi.Services.FieldsSchema {
         var name = reader.GetString(0);
         var sqlType = reader.GetString(1).ToLower();
         var maxLength = reader.IsDBNull(2) ? null : reader.GetValue(2).ToString();
-        var columnType = reader.GetString(3).ToLower();
         var isNullable = reader.GetString(4).Equals("YES", StringComparison.OrdinalIgnoreCase);
         var fkTable = reader.IsDBNull(5) ? null : reader.GetString(5);
         var constraintType = reader.IsDBNull(6) ? null : reader.GetString(6);
@@ -134,7 +132,7 @@ namespace AlamandaApi.Services.FieldsSchema {
         var isForeignKey = constraintType == "FOREIGN KEY" && fkTable != null;
         var isJunction = isForeignKey && fkTable != null && junctionTables.Contains(fkTable.ToLower());
 
-        var inferredType = InferType(name.ToLower(), sqlType, columnType, isForeignKey, isJunction);
+        var inferredType = InferType(name.ToLower(), sqlType, isForeignKey, isJunction);
 
         if (name != "Id" && (excludedFields == null || !excludedFields.Contains(name))) {
           fields.Add(new FieldInfo {
@@ -196,7 +194,7 @@ namespace AlamandaApi.Services.FieldsSchema {
       }
     }
 
-    private async Task LoadTranslationFields(string tableName, NpgsqlConnection conn, List<FieldInfo> fields, int? entityId = null) {
+    private async Task LoadTranslationFields(string tableName, NpgsqlConnection conn, List<FieldInfo> fields, int? entityId = null, int? maxPicturesSize = null) {
       var translationsTable = tableName + "Translations";
       if (!await TableExists(translationsTable, conn)) return;
 
@@ -222,12 +220,16 @@ namespace AlamandaApi.Services.FieldsSchema {
           var dataType = reader.GetString(1).ToLower();
           var maxLength = reader.IsDBNull(2) ? null : reader.GetValue(2).ToString();
           var isNullable = reader.GetString(3).Equals("YES", StringComparison.OrdinalIgnoreCase);
-
+          var currentDataType = InferType(colName.ToLower(), dataType, false, false);
+          string? currentMaxLength = maxLength;
+          if (currentDataType == FieldDataType.ImageArray) {
+            currentMaxLength = "5";
+          }
           baseFields.Add(new TranslationFieldItem {
             FieldName = ToFirstLowerCase(colName),
             OriginalColumnName = colName,
-            DataType = InferType(colName, dataType, "", false, false),
-            FieldMaxSize = maxLength,
+            DataType = currentDataType,
+            FieldMaxSize = currentMaxLength,
             IsRequired = !isNullable,
             OptionsArray = null
           });
@@ -320,9 +322,10 @@ namespace AlamandaApi.Services.FieldsSchema {
       return char.ToLower(value[0]) + value.Substring(1);
     }
 
-    private static FieldDataType InferType(string name, string sqlType, string columnType, bool isForeignKey, bool isJunction) {
+    private static FieldDataType InferType(string name, string sqlType, bool isForeignKey, bool isJunction) {
+      Console.WriteLine(name);
       if (isForeignKey) return isJunction ? FieldDataType.OptionsArray : FieldDataType.Options;
-      if (name.Contains("pictures") && columnType.StartsWith("json")) return FieldDataType.ImageArray;
+      if (name.Contains("pictures")) return FieldDataType.ImageArray;
       if (name.Contains("picture")) return FieldDataType.Image;
       if (sqlType == "text") return FieldDataType.TextArea;
       if (sqlType == "boolean" || sqlType == "bool") return FieldDataType.Boolean;

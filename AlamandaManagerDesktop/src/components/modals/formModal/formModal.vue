@@ -279,15 +279,18 @@ const onSubmit = async () => {
 
           for (const tf of group.fields) {
             const key = `translations_${group.languageId}_${tf.fieldName}`;
-            translationItem[tf.fieldName] = form[key] ?? '';
+            translationItem[tf.fieldName] = !!form[key] ? form[key] : null;
           }
 
           translations.push(translationItem);
         }
 
         sendData[f.fieldName] = translations;
+      } else if (f.dataType === FieldDataTypeEnum.Date && typeof form[f.fieldName] === 'string') {
+        
+        sendData[f.fieldName] = convertDate(form[f.fieldName]) as ResponseKeyType;
       } else {
-        sendData[f.fieldName] = form[f.fieldName] as ResponseKeyType;
+        sendData[f.fieldName] = (!!form[f.fieldName] ? form[f.fieldName] : null) as ResponseKeyType;
       }
     }
 
@@ -307,6 +310,15 @@ const onSubmit = async () => {
     isLoading.value = false;
   }
 };
+
+const convertDate = (value: FieldType): string | null => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+  const date = new Date(value);
+  date.setTime(date.getTime() + 5 * 60 * 60 * 1000);
+  return date.toISOString();
+}
 
 const onRemoveImage = (key: string) => {
   imageField[key] = null;
@@ -337,6 +349,16 @@ watch(
         } else {
           form[key] = [];
         }
+      } else if (field.dataType === FieldDataTypeEnum.Date) {
+        if(typedData[key] && typeof typedData[key] === 'string') {
+          const date = new Date(typedData[key]);
+          const year = date.getFullYear();
+          const month = String(date.getMonth() + 1).padStart(2, '0');
+          const day = String(date.getDate()).padStart(2, '0');
+          form[key] = `${year}-${month}-${day}`;
+        } else {
+          form[key] = null;
+        }
       } else if (field.dataType === FieldDataTypeEnum.Image) {
         form[key] = null;
         const val = typedData[key];
@@ -354,7 +376,7 @@ watch(
 
           for (const tField of group.fields) {
             const value = match[tField.fieldName];
-            form[`translations_${group.languageId}_${tField.fieldName}`] = value || '';
+            form[`translations_${group.languageId}_${tField.fieldName}`] = value ?? null;
           }
         }
       } else {
