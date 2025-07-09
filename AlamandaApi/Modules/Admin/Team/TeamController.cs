@@ -12,7 +12,7 @@ namespace AlamandaApi.Services.Team {
       _teamService = teamService;
     }
 
-    [HttpPost("")]
+    [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Create([FromBody] TeamMemberCreationModel member) {
       try {
@@ -24,7 +24,7 @@ namespace AlamandaApi.Services.Team {
       }
     }
 
-    [HttpPut("")]
+    [HttpPut]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update([FromBody] TeamMemberEditModel member) {
       try {
@@ -37,7 +37,7 @@ namespace AlamandaApi.Services.Team {
     }
 
 
-    [HttpGet("")]
+    [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
@@ -49,7 +49,7 @@ namespace AlamandaApi.Services.Team {
       }
     }  
 
-    [HttpDelete("")]
+    [HttpDelete]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {

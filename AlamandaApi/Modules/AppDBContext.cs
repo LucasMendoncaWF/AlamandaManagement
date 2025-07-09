@@ -13,7 +13,7 @@ using AlamandaApi.Services.FieldsSchema;
 namespace AlamandaApi.Data {
   public class AppDbContext : DbContext {
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
-
+  
     public DbSet<UserModel> Users { get; set; }
     public DbSet<TeamMemberModel> TeamMembers { get; set; }
     public DbSet<RefreshTokenModel> RefreshTokens { get; set; }
@@ -31,20 +31,20 @@ namespace AlamandaApi.Data {
       public List<T> Items { get; set; } = [];
       public int TotalPages { get; set; }
       public int CurrentPage { get; set; }
-      public List<FieldInfo> Fields { get; set; } = [];
+      public List<FieldInfo>? Fields { get; set; } = [];
     }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
       base.OnModelCreating(modelBuilder);
 
       modelBuilder.Entity<TeamMemberModel>()
-       .HasMany(tm => tm.Comics)
-       .WithMany(c => c.TeamMembers)
-       .UsingEntity<Dictionary<string, object>>(
-           "ComicsMembers",
-           j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId"),
-           j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
-       );
+      .HasMany(tm => tm.Comics)
+      .WithMany(c => c.TeamMembers)
+      .UsingEntity<Dictionary<string, object>>(
+          "ComicsMembers",
+          j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId"),
+          j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
+      );
 
       modelBuilder.Entity<TeamMemberModel>()
         .HasMany(tm => tm.Roles)
@@ -53,15 +53,6 @@ namespace AlamandaApi.Data {
           "TeamMemberRole",
           j => j.HasOne<RoleModel>().WithMany().HasForeignKey("RolesId"),
           j => j.HasOne<TeamMemberModel>().WithMany().HasForeignKey("TeamMemberId")
-        );
-
-      modelBuilder.Entity<ComicModel>()
-        .HasMany(tm => tm.Categories)
-        .WithMany(r => r.Comics)
-        .UsingEntity<Dictionary<string, object>>(
-          "ComicCategory",
-          j => j.HasOne<CategoryModel>().WithMany().HasForeignKey("CategoryId"),
-          j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId")
         );
 
       modelBuilder.Entity<UserModel>()
@@ -74,18 +65,20 @@ namespace AlamandaApi.Data {
       modelBuilder.Entity<UserModel>()
           .HasOne(u => u.Cart)
           .WithOne(c => c.User)
-          .HasForeignKey<CartModel>(c => c.UserId);
+          .HasForeignKey<CartModel>(c => c.UserId)
+          .OnDelete(DeleteBehavior.Restrict);
 
       modelBuilder.Entity<CartItemModel>()
           .HasOne(ci => ci.Cart)
           .WithMany(c => c.Items)
-          .HasForeignKey(ci => ci.CartId);
+          .HasForeignKey(ci => ci.CartId)
+          .OnDelete(DeleteBehavior.Cascade); // Deleta itens se cart for deletado
 
       modelBuilder.Entity<CartItemModel>()
           .HasOne(ci => ci.Comic)
           .WithMany()
-          .HasForeignKey(ci => ci.ComicId);
-
+          .HasForeignKey(ci => ci.ComicId)
+          .OnDelete(DeleteBehavior.Restrict);
 
       // translations
       // ___________________________ CATEGORIES ___________________________
@@ -150,6 +143,7 @@ namespace AlamandaApi.Data {
         .OnDelete(DeleteBehavior.SetNull);
 
       // ___________________________ COMIC ___________________________
+      modelBuilder.Entity<StatusModel>().ToTable("Status");
       modelBuilder.Entity<ComicTranslationsModel>().ToTable("ComicsTranslations");
       modelBuilder.Entity<ComicModel>()
         .HasMany(c => c.Translations)
@@ -166,6 +160,63 @@ namespace AlamandaApi.Data {
       modelBuilder.Entity<ComicTranslationsModel>()
         .HasIndex(t => new { t.ComicId, t.LanguageId })
         .IsUnique();
+
+      modelBuilder.Entity<ComicModel>()
+        .HasMany(tm => tm.Categories)
+        .WithMany(r => r.Comics)
+        .UsingEntity<Dictionary<string, object>>(
+          "ComicCategory",
+          j => j.HasOne<CategoryModel>().WithMany().HasForeignKey("CategoryId"),
+          j => j.HasOne<ComicModel>().WithMany().HasForeignKey("ComicId")
+        );
+
+      modelBuilder.Entity<ComicModel>()
+        .HasMany(c => c.Chapters)
+        .WithOne(ch => ch.Comic)
+        .HasForeignKey(ch => ch.ComicId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<ComicModel>()
+        .HasOne(c => c.Owner)
+        .WithMany(u => u.Comics)
+        .HasForeignKey(c => c.OwnerId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<ComicModel>()
+        .HasOne(t => t.StatusModel)
+        .WithMany()
+        .HasForeignKey(t => t.Status)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      // ___________________________ Chapters ___________________________
+      modelBuilder.Entity<ChapterTranslationModel>().ToTable("ChaptersTranslations");
+      modelBuilder.Entity<ChapterModel>()
+        .HasMany(c => c.Translations)
+        .WithOne(t => t.Chapter)
+        .HasForeignKey(t => t.ChapterId)
+        .OnDelete(DeleteBehavior.Cascade);
+
+      modelBuilder.Entity<ChapterTranslationModel>()
+        .HasOne(t => t.Language)
+        .WithMany()
+        .HasForeignKey(t => t.LanguageId)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<ChapterModel>()
+        .HasOne(t => t.ChapterStatus)
+        .WithMany()
+        .HasForeignKey(t => t.Status)
+        .OnDelete(DeleteBehavior.Restrict);
+
+      modelBuilder.Entity<ChapterTranslationModel>()
+        .HasIndex(t => new { t.ChapterId, t.LanguageId })
+        .IsUnique();
+
+      modelBuilder.Entity<ChapterModel>()
+        .HasMany(c => c.Pages)
+        .WithOne(p => p.Chapter)
+        .HasForeignKey(p => p.ChapterId)
+        .OnDelete(DeleteBehavior.Restrict);
     }
   }
 }

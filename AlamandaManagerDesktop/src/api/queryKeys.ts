@@ -1,4 +1,5 @@
 export default {
   List: 'List',
-  Fields: 'Fields'
+  Fields: 'Fields',
+  Chapters: 'Chapters'
 }

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using AlamandaApi.Services.Role;
 using AlamandaApi.Services.Comics;
 using AlamandaApi.Services.Category;
+using AlamandaApi.Services.Chapters;
 
 namespace AlamandaApi {
   public class Startup {
@@ -29,6 +30,7 @@ namespace AlamandaApi {
 
       var connectionString = $"server={dbHost};Port={dbPort};Username={dbUser};password={dbPassword};database={dbName}";
       services.AddMemoryCache();
+      services.AddHttpContextAccessor();
       services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
       services.AddScoped(typeof(CRUDService<>));
       services.AddScoped<AuthService>();
@@ -38,6 +40,7 @@ namespace AlamandaApi {
       services.AddScoped<TeamService>();
       services.AddScoped<RoleService>();
       services.AddScoped<ArtService>();
+      services.AddScoped<ChaptersService>();
       services.AddScoped<FieldsSchemaService>();
 
       var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET") ?? "";

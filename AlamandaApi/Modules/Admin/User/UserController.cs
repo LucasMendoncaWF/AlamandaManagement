@@ -12,7 +12,7 @@ namespace AlamandaApi.Services.User {
       _userService = userService;
     }
 
-    [HttpPut("")]
+    [HttpPut]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> AdminUpdateUser([FromBody] UserEdit user) {
       try {
@@ -24,7 +24,7 @@ namespace AlamandaApi.Services.User {
       }
     }
 
-    [HttpPost("")]
+    [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> AdminCreateUser([FromBody] UserCreate user) {
       try {
@@ -37,7 +37,7 @@ namespace AlamandaApi.Services.User {
     }
 
 
-    [HttpGet("")]
+    [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
@@ -49,7 +49,7 @@ namespace AlamandaApi.Services.User {
       }
     }  
 
-    [HttpDelete("")]
+    [HttpDelete]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {

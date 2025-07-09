@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using AlamandaApi.Data;
 using AlamandaApi.Services.Category;
 using AlamandaApi.Services.CRUD;
 using AlamandaApi.Services.Team;
@@ -7,18 +9,31 @@ using static AlamandaApi.Data.AppDbContext;
 namespace AlamandaApi.Services.Comics {
   public class ComicsService {
     private readonly CRUDService<ComicModel> _crudService;
+    private readonly AppDbContext _context;
+    private readonly IHttpContextAccessor _httpContextAccessor;
     private int maxFileSize = 2000;
-    public ComicsService(CRUDService<ComicModel> crudService) {
+    public ComicsService(
+      CRUDService<ComicModel> crudService,
+      IHttpContextAccessor httpContextAccessor,
+      AppDbContext context
+    ) {
+      _context = context;
       _crudService = crudService;
+      _httpContextAccessor = httpContextAccessor;
     }
 
-    public async Task<ComicModel> Create(ComicModel comic) {
+    public async Task<ComicModel> Create(ComicModel comic, bool? isFromAdmin = false) {
+      var httpContext = _httpContextAccessor.HttpContext;
+      if (httpContext == null) throw new UnauthorizedAccessException("Missing context.");
+      var userIdStr = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0";
+
       var result = await _crudService.CreateEntityAsync(
         new UpdateEntityOptions<ComicModel, ComicModel> {
           UpdatedObject = comic,
-          PropertiesToUpdate = ["Color", "Cover", "Status", "Total_Pages", "Available_Storage", "Publish_Date"],
+          PropertiesToUpdate = GetFieldsToUpdate(isFromAdmin),
           Include = q => q.Include(m => m.Categories),
           CustomUpdate = async (entity, updated, tableName, context) => {
+            entity.OwnerId = int.Parse(userIdStr);
             var categoriesIds = updated.CategoriesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
             if (categoriesIds?.Any() == true) {
               var relatedComics = await _crudService.Context.Categories
@@ -59,11 +74,12 @@ namespace AlamandaApi.Services.Comics {
       return result;
     }
 
-    public async Task<ComicModel> Update(ComicModel comic) {
+    public async Task<ComicModel> Update(ComicModel comic, bool? isFromAdmin = false) {
+      await EnsureUserOwnsComic(comic.Id);
       var result = await _crudService.UpdateEntityAsync(
         new UpdateEntityOptions<ComicModel, ComicModel> {
           UpdatedObject = comic,
-          PropertiesToUpdate = ["Color", "Cover", "Status", "Total_Pages", "Available_Storage", "Publish_Date"],
+          PropertiesToUpdate = GetFieldsToUpdate(isFromAdmin),
           Include = q => q.Include(m => m.Categories),
           CustomUpdate = async (existing, updated, tableName, context) => {
             var categoriesIds = updated.CategoriesIds?.Select(id => Convert.ToInt32(id)).ToList() ?? new List<int>();
@@ -112,7 +128,6 @@ namespace AlamandaApi.Services.Comics {
                 existingTranslation.Pictures = newTranslation.Pictures ?? null;
               }
             }
-
             await context.SaveChangesAsync();
             return existing;
           },
@@ -121,8 +136,51 @@ namespace AlamandaApi.Services.Comics {
       return result;
     }
 
+    private string[] GetFieldsToUpdate(bool? isFromAdmin) {
+      var fieldsToUpdate = new List<string> { "Color", "Total_Pages" };
+      if (isFromAdmin == true) {
+        fieldsToUpdate.AddRange([ "Status", "Publish_Date", "Available_Storage", "Cover" ]);
+      }
+      return fieldsToUpdate.ToArray();
+    }
+
     public async Task Delete(int id) {
+      await EnsureUserOwnsComic(id);
       await _crudService.DeleteWithMultipleTranslationImages(id, true);
+    }
+
+    public async Task<ComicModel?> GetById(int id, int languageId) {
+      var comic = await _context.Comics
+        .Include(c => c.ColorModel)
+        .Include(c => c.CoverModel)
+        .Include(c => c.StatusModel)
+        .Include(c => c.Categories)
+          .ThenInclude(cat => cat.Translations)
+        .Include(c => c.Translations)
+        .FirstOrDefaultAsync(c => c.Id == id);
+
+      if (comic == null) return null;
+      comic.Translations = comic.Translations
+        .Where(t => t.LanguageId == languageId)
+        .ToList();
+
+      if (comic.ColorModel?.Translations?.LanguageId != languageId)
+        comic.ColorModel = null;
+
+      if (comic.CoverModel?.Translations?.LanguageId != languageId)
+        comic.CoverModel = null;
+
+      if (comic.StatusModel != null)
+        comic.StatusModel.Translations = comic.StatusModel.Translations
+          .Where(t => t.LanguageId == languageId)
+          .ToList();
+
+      foreach (var cat in comic.Categories) {
+        cat.Translations = cat.Translations
+          .Where(t => t.LanguageId == languageId)
+          .ToList();
+      }
+      return comic;
     }
 
     public async Task<PagedResult<ComicListModel>> GetAll(ListQueryParams query) {
@@ -166,8 +224,26 @@ namespace AlamandaApi.Services.Comics {
       });
     }
 
-    public async Task<ComicModel?> GetById(int id) {
-      return await _crudService.GetByPropertyAsync("Id", id);
+    public async Task EnsureUserOwnsComic(int comicId) {
+      var httpContext = _httpContextAccessor.HttpContext;
+      if (httpContext == null) throw new UnauthorizedAccessException("Missing context.");
+
+      var userIdStr = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+      var permissionIdStr = httpContext.User.FindFirst("PermissionId")?.Value;
+
+      if (!int.TryParse(userIdStr, out var userId))
+        throw new UnauthorizedAccessException("Invalid user ID");
+
+      var isAdmin = permissionIdStr == "1";
+
+      if (isAdmin) return;
+
+      var isOwner = await _crudService.Context.Comics
+        .AsNoTracking()
+        .AnyAsync(c => c.Id == comicId && c.OwnerId == userId);
+
+      if (!isOwner)
+        throw new UnauthorizedAccessException("You don't have permission to modify this comic");
     }
 
     private ImageHandler.ImageSaveOptions createImageType(ComicTranslationsModel updated, ComicModel parent, string tableName) {

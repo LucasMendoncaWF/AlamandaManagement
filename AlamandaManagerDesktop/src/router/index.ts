@@ -9,7 +9,7 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.home,
     name: 'home',
-    component: () => import('@/sections/ordersPage.vue')
+    component: () => import('@/sections/comicsPage.vue') // TODO CHANGE TO ORDERS PAGE
   },
   {
     path: urls.users,
@@ -34,12 +34,12 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: urls.comics,
     name: 'comics',
-    component: () => import('@/sections/comics/comicsPage.vue')
+    component: () => import('@/sections/comicsPage.vue')
   },
   {
     path: urls.chapters + '/:comicId', 
     name: 'chapters',
-    component: () => import('@/sections/comics/chaptersPage.vue')
+    component: () => import('@/sections/chaptersPage.vue')
   },
   {
     path: urls.categories,

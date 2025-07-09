@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using AlamandaApi.Services.Category;
+using AlamandaApi.Services.Chapters;
 using AlamandaApi.Services.Language;
 using AlamandaApi.Services.Team;
+using AlamandaApi.Services.User;
 
 namespace AlamandaApi.Services.Comics {
   public class ComicBaseModel {
@@ -19,6 +21,10 @@ namespace AlamandaApi.Services.Comics {
     public int? Cover { get; set; }
     public virtual CoverModel? CoverModel { get; set; }
 
+    [ForeignKey("OwnerId")]
+    public int? OwnerId { get; set; }
+    public virtual UserModel? Owner { get; set; }
+
     [ForeignKey("Status")]
     public int? Status { get; set; }
     public virtual StatusModel? StatusModel { get; set; }
@@ -33,6 +39,7 @@ namespace AlamandaApi.Services.Comics {
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
     public virtual ICollection<ComicTranslationsModel> Translations { get; set; } = new List<ComicTranslationsModel>();
+    public ICollection<ChapterModel> Chapters { get; set; } = new List<ChapterModel>();
   }
 
   // __________________ TRANSLATIONS __________________________________
@@ -132,8 +139,7 @@ namespace AlamandaApi.Services.Comics {
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
-    public StatusModelTranslation Translations { get; set; } = new();
-
+    public virtual ICollection<StatusModelTranslation> Translations { get; set; } = new List<StatusModelTranslation>();
   }
 
   public class StatusModelTranslation {

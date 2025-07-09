@@ -12,7 +12,7 @@ namespace AlamandaApi.Services.Art {
       _artService = artService;
     }
 
-    [HttpPost("")]
+    [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Create([FromBody] ArtCreationModel art) {
       try {
@@ -24,7 +24,7 @@ namespace AlamandaApi.Services.Art {
       }
     }
 
-    [HttpPut("")]
+    [HttpPut]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update([FromBody] ArtModel art) {
       try {
@@ -37,7 +37,7 @@ namespace AlamandaApi.Services.Art {
     }
 
 
-    [HttpGet("")]
+    [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
@@ -49,7 +49,7 @@ namespace AlamandaApi.Services.Art {
       }
     }  
 
-    [HttpDelete("")]
+    [HttpDelete]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {

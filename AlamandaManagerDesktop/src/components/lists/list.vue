@@ -128,8 +128,8 @@ const emptyImg = new URL('@/assets/images/empty.webp', import.meta.url).href;
 
 const props = defineProps<Props>();
 
-const currentPage = ref(1);
 const isFormOpen = ref(false);
+const currentPage = ref(1);
 const queryString = ref('');
 const editId = ref<number | null>(null);
 const deleteId = ref<number | null>(null);

@@ -12,7 +12,7 @@ namespace AlamandaApi.Services.Category {
       _categoryService = categoryService;
     }
 
-    [HttpPost("")]
+    [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Create([FromBody] CategoryModelView category) {
       try {
@@ -24,7 +24,7 @@ namespace AlamandaApi.Services.Category {
       }
     }
 
-    [HttpPut("")]
+    [HttpPut]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update([FromBody] CategoryModel category) {
       try {
@@ -37,7 +37,7 @@ namespace AlamandaApi.Services.Category {
     }
 
 
-    [HttpGet("")]
+    [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
@@ -49,7 +49,7 @@ namespace AlamandaApi.Services.Category {
       }
     }  
 
-    [HttpDelete("")]
+    [HttpDelete]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {

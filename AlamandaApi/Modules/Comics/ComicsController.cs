@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AlamandaApi.Services.Comics {
+  [Authorize]
   [ApiController]
   [Route("[controller]")]
   public class ComicController : ControllerBase {
@@ -12,11 +13,11 @@ namespace AlamandaApi.Services.Comics {
       _comicsService = comicsService;
     }
 
-    [HttpPost("")]
+    [HttpPost]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Create([FromBody] ComicModel comic) {
       try {
-        var response = await _comicsService.Create(comic);
+        var response = await _comicsService.Create(comic, true);
         return Ok(new { response });
       }
       catch (Exception ex) {
@@ -24,11 +25,11 @@ namespace AlamandaApi.Services.Comics {
       }
     }
 
-    [HttpPut("")]
+    [HttpPut]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Update([FromBody] ComicModel comic) {
       try {
-        var result = await _comicsService.Update(comic);
+        var result = await _comicsService.Update(comic, true);
         return Ok(new { result });
       }
       catch (Exception ex) {
@@ -37,7 +38,7 @@ namespace AlamandaApi.Services.Comics {
     }
 
 
-    [HttpGet("")]
+    [HttpGet]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> GetAll([FromQuery] ListQueryParams query) {
       try {
@@ -47,14 +48,37 @@ namespace AlamandaApi.Services.Comics {
       catch (Exception ex) {
         return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
       }
-    }  
+    }
 
-    [HttpDelete("")]
+    [HttpDelete]
     [Authorize(Policy = "AdminOnly")]
     public async Task<IActionResult> Delete([FromQuery] int id) {
       try {
         await _comicsService.Delete(id);
         return Ok(new { success = true });
+      }
+      catch (Exception ex) {
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
+      }
+    }
+
+    //_________________________ OPEN URLS __________________________________________
+    [HttpPost("add")]
+    public async Task<IActionResult> CreateByUser([FromBody] ComicModel comic) {
+      try {
+        var response = await _comicsService.Create(comic);
+        return Ok(new { response });
+      }
+      catch (Exception ex) {
+        return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });
+      }
+    }
+
+    [HttpPost("update")]
+    public async Task<IActionResult> UpdateByUser([FromBody] ComicModel comic) {
+      try {
+        var response = await _comicsService.Create(comic);
+        return Ok(new { response });
       }
       catch (Exception ex) {
         return BadRequest(new { message = ex.InnerException?.Message ?? ex.Message });

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using AlamandaApi.Services.Cart;
+using AlamandaApi.Services.Comics;
 
 namespace AlamandaApi.Services.User {
 
@@ -45,6 +46,7 @@ namespace AlamandaApi.Services.User {
 
     public ICollection<RefreshTokenModel> RefreshTokens { get; set; } = new List<RefreshTokenModel>();
     public CartModel Cart { get; set; } = new CartModel();
+    public virtual ICollection<ComicModel> Comics { get; set; } = new List<ComicModel>();
   }
 
   // _____________________________ REFRESH TOKEN _______________________________
