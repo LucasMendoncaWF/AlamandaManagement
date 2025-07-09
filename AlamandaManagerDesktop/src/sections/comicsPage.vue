@@ -18,6 +18,6 @@ import router from '@/router';
 import urls from '@/router/urls';
 
 const onClickChapter = (id: number) => {
-  router.push(urls.comicChapters(id))
+  router.push(urls.comicChapters(id));
 }
 </script>

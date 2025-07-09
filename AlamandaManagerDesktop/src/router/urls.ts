@@ -8,7 +8,7 @@ const urls = {
   roles: '/roles',
   categories: '/categories',
   chapters: '/chapters',
-  comicChapters: (comicId: number | string) => `/comics/${comicId}/chapters`
+  comicChapters: (comicId: number | string) => `/chapters/${comicId}`
 }
 
 export default urls;
