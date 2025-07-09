@@ -87,7 +87,6 @@ export async function restApi<T>(request: RestRequest): Promise<T> {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json'
   };
-  console.log(request)
   let response = await fetchApi({ ...request, headers });
 
   if (response.status === 401 && !request.url.includes('auth')) {

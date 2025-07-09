@@ -14,6 +14,7 @@ namespace AlamandaApi.Services.CRUD {
     public Expression<Func<T, TResult>> Selector { get; set; } = default!;
     public Func<IQueryable<T>, IQueryable<T>>? Include { get; set; } = null;
     public List<string> IgnoreFields { get; set; } = null!;
+    public int? MaxFileSize { get; set; } = 500;
   }
 
   public class UpdateEntityOptions<T, X> where T : class where X : class {

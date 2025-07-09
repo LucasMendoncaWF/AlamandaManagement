@@ -3,7 +3,6 @@
     title="Fan Arts"
     label="FanArt"
     :showFieldsOnTable="['picture', 'social']"
-    :maxImageSize="1000"
     :searchFunction="getArts"
     :addItemFunction="addArt"
     :updateItemFunction="updateArt"

@@ -60,8 +60,7 @@
       :isFieldsError="isError"
       :isFieldsPending="isPending"
       :isFormOpen="isFormOpen"
-      :fields="[...data?.fields]?.sort((a, b) => a.dataType - b.dataType)" 
-      :maxImageSize="maxImageSize"
+      :fields="[...data?.fields]?.sort((a, b) => a.dataType - b.dataType)"
       :data="data?.items.find(item => editId === item.id)"
     />
     <div class="list-scroll">
@@ -118,7 +117,6 @@ const emptyImg = new URL('@/assets/images/empty.webp', import.meta.url).href;
 
   interface Props {
     title: string;
-    maxImageSize?: number;
     label: string;
     showFieldsOnTable: string[];
     searchFunction: (params: QueryParams) => Promise<ListResponse<TRes>>;

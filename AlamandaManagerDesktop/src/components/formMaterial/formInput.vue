@@ -52,7 +52,7 @@
       {{ modelValue ? formatDateWithoutTime(modelValue, 1) : 'Select a date' }}
     </button>
     <input
-      @focus="focusInput"
+      @click="focusInput"
       v-bind="attrs"
       ref="inputRef"
       @input="onInput"

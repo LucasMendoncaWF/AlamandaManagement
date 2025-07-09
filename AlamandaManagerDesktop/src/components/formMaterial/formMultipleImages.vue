@@ -19,6 +19,7 @@
       border: 2px solid $secondary;
       border-radius: 5px;
       padding: 8px;
+      background-color: $white;
       background-position: center;
       background-size: contain;
       background-repeat: no-repeat;

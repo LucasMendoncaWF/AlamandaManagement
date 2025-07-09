@@ -4,6 +4,7 @@ export interface FormFieldModel {
   fieldMaxSize: string;
   optionsArray: FormFieldOptionModel[];
   isRequired: boolean;
+  maxFileSize?: number | null;
   translationsGroups: {
     languageId: number;
     languageName: string;

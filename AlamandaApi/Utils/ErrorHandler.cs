@@ -6,7 +6,7 @@ public static class ErrorHandler {
     if (pgEx != null && pgEx.SqlState == "23505") {
       errorMsg = GetFriendlyUniqueErrorMessage(pgEx.MessageText);
     }
-    throw new Exception(pgEx?.MessageText);
+    throw new Exception(errorMsg);
   }
 
   public static string GetFriendlyUniqueErrorMessage(string pgErrorMsg) {
@@ -17,10 +17,7 @@ public static class ErrorHandler {
       if (constraintName.Equals("MemberSocial", StringComparison.OrdinalIgnoreCase))
         return "A member with this Social already exists.";
 
-      if (constraintName.Equals("AnotherConstraintName", StringComparison.OrdinalIgnoreCase))
-        return "Custom message for another constraint.";
-
-      return $"A record with this value already exists (constraint: {constraintName}).";
+      return $"A record with this value already exists ({constraintName}).";
     }
     return "A unique constraint violation occurred.";
   }

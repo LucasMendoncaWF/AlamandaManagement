@@ -55,7 +55,7 @@ namespace AlamandaApi.Services.CRUD {
         .Take(pageSize)
         .Select(options.Selector)
         .ToListAsync();
-      var Fields = await _fieldSchemaService.GetFieldTypes(_tableName);
+      var Fields = await _fieldSchemaService.GetFieldTypes(_tableName, options.MaxFileSize);
       var ignoreFields = options.IgnoreFields ?? new List<string>();
       Fields.RemoveAll(item =>
         !string.IsNullOrEmpty(item.FieldName) &&
@@ -180,24 +180,23 @@ namespace AlamandaApi.Services.CRUD {
       ClearCache();
     }
 
-    public async Task DeleteWithImage(object id) {
+    public async Task DeleteWithImage(object id, bool hasSubFolder = false) {
       T? entity = await _context.Set<T>().FindAsync(id);
       if (entity == null) {
         throw new KeyNotFoundException("Not found");
       }
-
       var pictureProperty = entity.GetType().GetProperty("Picture");
       if (pictureProperty != null) {
         var pictureValue = pictureProperty.GetValue(entity) as string;
         if (!string.IsNullOrEmpty(pictureValue)) {
-          ImageHandler.DeleteImage(_tableName, pictureValue);
+          var folder = hasSubFolder ? $"{_tableName}/{id}" : _tableName;
+          ImageHandler.DeleteImage(folder, pictureValue);
         }
       }
-
       await DeleteByIdAsync(id);
     }
 
-    public async Task DeleteWithMultipleImages(object id) {
+    public async Task DeleteWithMultipleTranslationImages(object id, bool hasSubFolder) {
       T? entity = await _context.Set<T>().FindAsync(id);
       if (entity == null)
         throw new KeyNotFoundException("Not found");
@@ -219,7 +218,8 @@ namespace AlamandaApi.Services.CRUD {
         var pictures = picturesProp.GetValue(translation) as IEnumerable<string?>;
         if (pictures != null) {
           foreach (string? picture in pictures) {
-            ImageHandler.DeleteImage(_tableName, picture);
+            var folder = hasSubFolder ? $"{_tableName}/{id}/" : _tableName;
+            ImageHandler.DeleteImage(folder, picture);
           }
         }
       }

@@ -7,7 +7,7 @@ using static AlamandaApi.Data.AppDbContext;
 namespace AlamandaApi.Services.Comics {
   public class ComicsService {
     private readonly CRUDService<ComicModel> _crudService;
-
+    private int maxFileSize = 2000;
     public ComicsService(CRUDService<ComicModel> crudService) {
       _crudService = crudService;
     }
@@ -34,7 +34,7 @@ namespace AlamandaApi.Services.Comics {
             foreach (var lang in translationsDict) {
               List<string?>? pictures = null;
               pictures = await ImageHandler.SaveImages(
-                createImageType(lang, tableName),
+                createImageType(lang, entity, tableName),
                 lang.Pictures
               );
               var langId = lang.LanguageId;
@@ -83,7 +83,7 @@ namespace AlamandaApi.Services.Comics {
                   .FirstOrDefault(t => t.LanguageId == langId);
               List<string?>? pictures = null;
                 pictures = await ImageHandler.SaveImages(
-                  createImageType(lang, tableName),
+                  createImageType(lang, updated, tableName),
                   lang.Pictures,
                   existingTranslation?.Pictures
                 );
@@ -122,12 +122,13 @@ namespace AlamandaApi.Services.Comics {
     }
 
     public async Task Delete(int id) {
-      await _crudService.DeleteWithMultipleImages(id);
+      await _crudService.DeleteWithMultipleTranslationImages(id, true);
     }
 
     public async Task<PagedResult<ComicListModel>> GetAll(ListQueryParams query) {
       return await _crudService.GetPagedAsync(new ListOptions<ComicModel, ComicListModel> {
         QueryParams = query,
+        MaxFileSize = maxFileSize,
         IgnoreFields = ["teammembers", "cart", "users"],
         Selector = u => new ComicListModel {
           Id = u.Id,
@@ -169,13 +170,13 @@ namespace AlamandaApi.Services.Comics {
       return await _crudService.GetByPropertyAsync("Id", id);
     }
 
-    private ImageHandler.ImageSaveOptions createImageType(ComicTranslationsModel updated, string tableName) {
+    private ImageHandler.ImageSaveOptions createImageType(ComicTranslationsModel updated, ComicModel parent, string tableName) {
       return new ImageHandler.ImageSaveOptions {
         Name = updated.LanguageId.ToString() ?? "0",
-        Folder = tableName,
+        Folder = $"{tableName}/{parent.Id}",
         Quality = 60,
         MaxWidth = 200,
-        MaxKb = 2000,
+        MaxKb = maxFileSize,
       };
     }
   }

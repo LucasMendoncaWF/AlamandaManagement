@@ -31,6 +31,7 @@ public static class ImageHandler {
       using var inputStream = new MemoryStream(imageBytes);
       using var image = await Image.LoadAsync(inputStream);
 
+      Console.WriteLine(options.MaxKb);
       if (options.MaxKb.HasValue) {
         var maxBytes = options.MaxKb.Value * 1024;
         if (imageBytes.Length > maxBytes) {
@@ -88,7 +89,8 @@ public static class ImageHandler {
         ImageSaveOptions options = new ImageSaveOptions {
           Folder = baseOptions.Folder,
           MaxWidth = baseOptions.MaxWidth,
-          Name = baseOptions.Name + "_multi_" + i
+          Name = baseOptions.Name + "_multi_" + i,
+          MaxKb = baseOptions.MaxKb,
         };
         string? newImageUrl = await SaveImage(image, options);
         if (newImageUrl != null) {
@@ -100,11 +102,24 @@ public static class ImageHandler {
   }
 
   public static void DeleteImage(string folder, string? image) {
+    if (string.IsNullOrEmpty(image)) return;
+    folder = folder.Replace("/", Path.DirectorySeparatorChar.ToString());
+
     var previousFileName = Path.GetFileName(image);
-    if (previousFileName != null) {
-      var previousFilePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER, folder, previousFileName);
-      if (File.Exists(previousFilePath)) {
-        File.Delete(previousFilePath);
+    if (string.IsNullOrEmpty(previousFileName)) return;
+    var fullFolderPath = Path.Combine(
+      Directory.GetCurrentDirectory(),
+      "wwwroot",
+      IMAGES_FOLDER,
+      folder
+    );
+    var fullImagePath = Path.Combine(fullFolderPath, previousFileName);
+    Console.WriteLine($"[DeleteImage] {fullImagePath}");
+
+    if (File.Exists(fullImagePath)) {
+      File.Delete(fullImagePath);
+      if (Directory.Exists(fullFolderPath) && !Directory.EnumerateFileSystemEntries(fullFolderPath).Any()) {
+        Directory.Delete(fullFolderPath, recursive: true);
       }
     }
   }

@@ -24,6 +24,7 @@ namespace AlamandaApi.Services.FieldsSchema {
     public List<Option>? OptionsArray { get; set; }
     public bool IsRequired { get; set; }
     public List<TranslationLanguageGroup>? TranslationsGroups { get; set; }
+    public int? MaxFileSize { get; set; }
   }
   public class TranslationFieldItem {
     public string FieldName { get; set; } = null!;
@@ -33,6 +34,7 @@ namespace AlamandaApi.Services.FieldsSchema {
     public string? FieldMaxSize { get; set; }
     public bool IsRequired { get; set; }
     public List<Option>? OptionsArray { get; set; }
+    public int? MaxFileSize { get; set; }
   }
 
   public class TranslationLanguageGroup {
@@ -54,7 +56,7 @@ namespace AlamandaApi.Services.FieldsSchema {
       _context = context;
     }
 
-    public async Task<List<FieldInfo>> GetFieldTypes(string tableName, List<string>? excludedFields = null, int? maxPicturesSize = null) {
+    public async Task<List<FieldInfo>> GetFieldTypes(string tableName, int? maxFileSize) {
       var fields = new List<FieldInfo>();
       var foreignKeys = new Dictionary<string, string>();
       var foundJunctions = new Dictionary<string, string>();
@@ -65,13 +67,13 @@ namespace AlamandaApi.Services.FieldsSchema {
       await LoadJunctionTables(conn, tableName, foundJunctions);
 
       var junctionTables = new HashSet<string>(foundJunctions.Keys.Select(k => k.ToLower()));
-      await LoadColumns(conn, tableName, excludedFields, fields, foreignKeys, junctionTables);
+      await LoadColumns(conn, tableName, fields, foreignKeys, junctionTables, maxFileSize);
 
       await LoadOptionsForForeignKeys(fields, foreignKeys);
 
       await LoadJunctionForeignKeyOptions(conn, foundJunctions, tableName, fields);
 
-      await LoadTranslationFields(tableName, conn, fields, maxPicturesSize);
+      await LoadTranslationFields(tableName, conn, fields, maxFileSize: maxFileSize);
 
       return fields;
     }
@@ -98,7 +100,14 @@ namespace AlamandaApi.Services.FieldsSchema {
       relReader.Close();
     }
 
-    private async Task LoadColumns(NpgsqlConnection conn, string tableName, List<string>? excludedFields, List<FieldInfo> fields, Dictionary<string, string> foreignKeys, HashSet<string> junctionTables) {
+    private async Task LoadColumns(
+      NpgsqlConnection conn,
+      string tableName,
+      List<FieldInfo> fields,
+      Dictionary<string, string> foreignKeys,
+      HashSet<string> junctionTables,
+      int? maxFileSize
+    ) {
       await using var cmd = conn.CreateCommand();
       cmd.CommandText = @"
         SELECT
@@ -134,11 +143,12 @@ namespace AlamandaApi.Services.FieldsSchema {
 
         var inferredType = InferType(name.ToLower(), sqlType, isForeignKey, isJunction);
 
-        if (name != "Id" && (excludedFields == null || !excludedFields.Contains(name))) {
+        if (name != "Id") {
           fields.Add(new FieldInfo {
             FieldName = ToFirstLowerCase(name),
             DataType = inferredType,
             FieldMaxSize = maxLength,
+            MaxFileSize = maxFileSize,
             OptionsArray = null,
             IsRequired = !isNullable
           });
@@ -194,7 +204,7 @@ namespace AlamandaApi.Services.FieldsSchema {
       }
     }
 
-    private async Task LoadTranslationFields(string tableName, NpgsqlConnection conn, List<FieldInfo> fields, int? entityId = null, int? maxPicturesSize = null) {
+    private async Task LoadTranslationFields(string tableName, NpgsqlConnection conn, List<FieldInfo> fields, int? entityId = null, int? maxFileSize = null) {
       var translationsTable = tableName + "Translations";
       if (!await TableExists(translationsTable, conn)) return;
 
@@ -229,6 +239,7 @@ namespace AlamandaApi.Services.FieldsSchema {
             FieldName = ToFirstLowerCase(colName),
             OriginalColumnName = colName,
             DataType = currentDataType,
+            MaxFileSize = maxFileSize,
             FieldMaxSize = currentMaxLength,
             IsRequired = !isNullable,
             OptionsArray = null
@@ -273,7 +284,8 @@ namespace AlamandaApi.Services.FieldsSchema {
             DataType = f.DataType,
             FieldMaxSize = f.FieldMaxSize,
             IsRequired = f.IsRequired,
-            OptionsArray = f.OptionsArray
+            OptionsArray = f.OptionsArray,
+            MaxFileSize = maxFileSize,
           })
           .ToList();
 

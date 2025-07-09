@@ -200,7 +200,6 @@ interface Props {
   addItemFunction: (data: TForm) => Promise<TRes>;
   updateItemFunction: (data: TForm) => Promise<TRes>;
   fields?: FormFieldModel[];
-  maxImageSize?: number;
   isFieldsError?: boolean;
   isFieldsPending?: boolean;
 }
@@ -212,7 +211,6 @@ const imageField = reactive<Record<string, string | null>>({});
 const isLoading = ref(false);
 const showTranslations = ref('PT');
 const errorMessage = ref<string | null>(null);
-const maxSize = props.maxImageSize || 500;
 
 const onToggleTranslationFields = (value: string) => {
   if(value === showTranslations.value) {
@@ -323,8 +321,9 @@ const isImagesSizeCorrect = (field: FormFieldModel, value?: FieldType) => {
       field.dataType === FieldDataTypeEnum.ImageArray
   ) {
     const files = Array.isArray(value) ? value : [value];
+    const maxSize = field.maxFileSize ?? 500;
     for (const file of files) {
-      if (file && file instanceof File && file.size / (1024 * 1024) > maxSize / 1000) {
+      if (file && file instanceof File && file.size / (1024 * 1024) > maxSize/1000) {
         errorMessage.value = `The max size for pictures is ${maxSize}KB`;
         return false;
       }
